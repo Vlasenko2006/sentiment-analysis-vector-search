@@ -180,10 +180,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - HuggingFace for the transformers library
 - The open-source community for the various tools and libraries used
 
-## 📧 Contact
-
-Andrey Vlasenko - [Your GitHub Profile]
-
 Project Link: [https://github.com/yourusername/sentiment-analysis-vector-search](https://github.com/yourusername/sentiment-analysis-vector-search)
 
 ---
