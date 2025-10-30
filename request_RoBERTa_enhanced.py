@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Enhanced RoBERTa Sentiment Analysis with Vector Search and Visualization
-- Processes 3,500 samples from Sentiment140 dataset
+- Configurable processing of samples from Sentiment140 dataset
 - Indexes comments by sentiment into separate folders
 - Uses vector search to find most representative comments
 - Creates interesting visualizations
+
+Configuration parameters are set at the top of the file for easy customization.
+Default: 3,500 samples (1,750 per class)
 
 Created on Thu Oct 30 2025
 @author: andreyvlasenko
@@ -27,6 +30,35 @@ from collections import Counter
 import re
 from download_and_prepare_dataset import download_and_prepare_dataset
 
+# ============================================================================
+# CONFIGURATION PARAMETERS
+# ============================================================================
+
+# Dataset sampling parameters
+SAMPLES_PER_CLASS = 17500          # Number of samples per sentiment class (negative/positive)
+TOTAL_SAMPLES = SAMPLES_PER_CLASS * 2  # Total samples to process (3500)
+
+# Processing parameters  
+BATCH_SIZE = 100                  # Batch size for sentiment analysis processing
+CONFIDENCE_THRESHOLD = 0.8        # Confidence threshold for 3-class simulation
+
+# Vector search parameters
+N_REPRESENTATIVES = 10            # Number of representative comments to find per sentiment
+TFIDF_MAX_FEATURES = 1000        # Maximum features for TF-IDF vectorization
+TFIDF_MIN_DF = 4                 # Minimum document frequency for TF-IDF
+TFIDF_MAX_DF = 0.8               # Maximum document frequency for TF-IDF
+
+# Visualization parameters
+TOP_WORDS_COUNT = 15             # Number of top words to show in frequency analysis
+WORDCLOUD_MAX_WORDS = 100        # Maximum words in word clouds
+
+# File paths
+CACHE_DIR = "/tmp/hf_cache"
+MODEL_PATH = "/Users/andreyvlasenko/tst/Request/my_volume/hf_model"
+OUTPUT_BASE_DIR = "/Users/andreyvlasenko/tst/Request/my_volume/sentiment_analysis"
+
+# ============================================================================
+
 # Set style for better plots
 plt.style.use('default')  # Use default style instead of seaborn which might not be available
 sns.set_palette("husl")
@@ -36,10 +68,9 @@ path_db = download_and_prepare_dataset()
 print('Dataset path:', path_db)
 
 # Set HuggingFace cache directory
-cache_dir = "/tmp/hf_cache"
-os.makedirs(cache_dir, exist_ok=True)
-os.environ["TRANSFORMERS_CACHE"] = cache_dir
-os.environ["HF_HOME"] = cache_dir
+os.makedirs(CACHE_DIR, exist_ok=True)
+os.environ["TRANSFORMERS_CACHE"] = CACHE_DIR
+os.environ["HF_HOME"] = CACHE_DIR
 
 print("=" * 80)
 print("ENHANCED ROBERTA SENTIMENT ANALYSIS WITH VECTOR SEARCH")
@@ -47,11 +78,10 @@ print("=" * 80)
 
 # Initialize sentiment analysis model
 print("\n🤖 Loading sentiment analysis model...")
-existing_model_path = "/Users/andreyvlasenko/tst/Request/my_volume/hf_model"
 
-if os.path.exists(os.path.join(existing_model_path, "config.json")):
+if os.path.exists(os.path.join(MODEL_PATH, "config.json")):
     print("📂 Using existing DistilBERT model...")
-    pipe = pipeline("sentiment-analysis", model=existing_model_path)
+    pipe = pipeline("sentiment-analysis", model=MODEL_PATH)
     model_name = "distilbert-base-uncased-finetuned-sst-2-english"
     simulate_3_class = True
 else:
@@ -61,19 +91,18 @@ else:
 print(f"✅ Model loaded successfully!")
 
 # Create output directories
-base_output_dir = "/Users/andreyvlasenko/tst/Request/my_volume/sentiment_analysis"
 folders = {
-    'positive': os.path.join(base_output_dir, 'positive'),
-    'negative': os.path.join(base_output_dir, 'negative'), 
-    'neutral': os.path.join(base_output_dir, 'neutral'),
-    'visualizations': os.path.join(base_output_dir, 'visualizations'),
-    'vectors': os.path.join(base_output_dir, 'vectors')
+    'positive': os.path.join(OUTPUT_BASE_DIR, 'positive'),
+    'negative': os.path.join(OUTPUT_BASE_DIR, 'negative'), 
+    'neutral': os.path.join(OUTPUT_BASE_DIR, 'neutral'),
+    'visualizations': os.path.join(OUTPUT_BASE_DIR, 'visualizations'),
+    'vectors': os.path.join(OUTPUT_BASE_DIR, 'vectors')
 }
 
 for folder in folders.values():
     os.makedirs(folder, exist_ok=True)
 
-print(f"📁 Created output directories in: {base_output_dir}")
+print(f"📁 Created output directories in: {OUTPUT_BASE_DIR}")
 
 # Enhanced sentiment analysis function
 def analyze_sentiment_enhanced(text):
@@ -84,12 +113,12 @@ def analyze_sentiment_enhanced(text):
     
     # 3-class simulation with confidence thresholds
     if raw_label == "POSITIVE":
-        if confidence > 0.8:
+        if confidence > CONFIDENCE_THRESHOLD:
             readable_label = "POSITIVE"
         else:
             readable_label = "NEUTRAL"
     else:  # NEGATIVE
-        if confidence > 0.8:
+        if confidence > CONFIDENCE_THRESHOLD:
             readable_label = "NEGATIVE"
         else:
             readable_label = "NEUTRAL"
@@ -116,10 +145,10 @@ try:
     print(f"✅ Dataset loaded successfully!")
     print(f"   Total samples: {len(df_dataset):,}")
     
-    # Take 3,500 samples with balanced distribution
-    # Get 1,750 negative (target=0) and 1,750 positive (target=4)
-    negative_samples = df_dataset[df_dataset['target'] == 0].head(1750)
-    positive_samples = df_dataset[df_dataset['target'] == 4].head(1750)
+    # Take samples with balanced distribution
+    # Get negative (target=0) and positive (target=4) samples
+    negative_samples = df_dataset[df_dataset['target'] == 0].head(SAMPLES_PER_CLASS)
+    positive_samples = df_dataset[df_dataset['target'] == 4].head(SAMPLES_PER_CLASS)
     
     df_sample = pd.concat([negative_samples, positive_samples], ignore_index=True)
     df_sample = df_sample.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
@@ -144,14 +173,13 @@ except Exception as e:
 print(f"\n🚀 Analyzing {len(df_sample)} samples...")
 print("⏱️  This will take several minutes...")
 
-batch_size = 100
 all_results = []
 processing_times = []
 
 start_total = time.time()
 
-for i in range(0, len(df_sample), batch_size):
-    batch_end = min(i + batch_size, len(df_sample))
+for i in range(0, len(df_sample), BATCH_SIZE):
+    batch_end = min(i + BATCH_SIZE, len(df_sample))
     batch = df_sample.iloc[i:batch_end]
     
     batch_start = time.time()
@@ -173,7 +201,7 @@ for i in range(0, len(df_sample), batch_size):
     avg_time = batch_time / len(batch)
     eta = ((len(df_sample) - batch_end) / len(batch)) * avg_time
     
-    print(f"   Progress: {progress:5.1f}% | Batch {i//batch_size + 1:2d} | ETA: {eta/60:.1f}m")
+    print(f"   Progress: {progress:5.1f}% | Batch {i//BATCH_SIZE + 1:2d} | ETA: {eta/60:.1f}m")
 
 total_time = time.time() - start_total
 print(f"\n✅ Analysis complete!")
@@ -231,17 +259,20 @@ def create_text_vectors(texts, method='tfidf'):
     """Create vector representations of texts"""
     if method == 'tfidf':
         vectorizer = TfidfVectorizer(
-            max_features=1000,
+            max_features=TFIDF_MAX_FEATURES,
             stop_words='english',
             ngram_range=(1, 2),
-            min_df=2,
-            max_df=0.8
+            min_df=TFIDF_MIN_DF,
+            max_df=TFIDF_MAX_DF
         )
         vectors = vectorizer.fit_transform(texts)
         return vectors, vectorizer
     
-def find_representative_comments(sentiment_data, n_representatives=10):
+def find_representative_comments(sentiment_data, n_representatives=None):
     """Find most representative comments using clustering and centroids"""
+    if n_representatives is None:
+        n_representatives = N_REPRESENTATIVES
+        
     if len(sentiment_data) < n_representatives:
         return sentiment_data
     
@@ -283,7 +314,7 @@ for sentiment in ['POSITIVE', 'NEGATIVE', 'NEUTRAL']:
     
     if len(sentiment_data) > 0:
         print(f"\n📝 Analyzing {sentiment} comments ({len(sentiment_data)} total)...")
-        representatives = find_representative_comments(sentiment_data, n_representatives=10)
+        representatives = find_representative_comments(sentiment_data)
         representative_results[sentiment] = representatives
         
         print(f"✅ Found {len(representatives)} representative {sentiment} comments:")
@@ -377,7 +408,7 @@ for i, sentiment in enumerate(['POSITIVE', 'NEGATIVE', 'NEUTRAL']):
                 width=400, height=300, 
                 background_color='white',
                 colormap=['Greens', 'Reds', 'Greys'][i],
-                max_words=100,
+                max_words=WORDCLOUD_MAX_WORDS,
                 relative_scaling=0.5,
                 random_state=42
             ).generate(all_text)
@@ -399,8 +430,10 @@ plt.show()
 # 3. Most common words analysis
 print("\n📈 Creating word frequency analysis...")
 
-def get_top_words(texts, n_words=15):
+def get_top_words(texts, n_words=None):
     """Get top words from texts"""
+    if n_words is None:
+        n_words = TOP_WORDS_COUNT
     all_text = ' '.join([clean_text_for_wordcloud(text) for text in texts])
     words = all_text.split()
     # Filter out common words
@@ -470,11 +503,11 @@ performance_summary = {
 }
 
 # Save performance summary
-with open(os.path.join(base_output_dir, 'performance_summary.json'), 'w') as f:
+with open(os.path.join(OUTPUT_BASE_DIR, 'performance_summary.json'), 'w') as f:
     json.dump(performance_summary, f, indent=2)
 
 # Save full results
-results_df.to_csv(os.path.join(base_output_dir, 'complete_results.csv'), index=False)
+results_df.to_csv(os.path.join(OUTPUT_BASE_DIR, 'complete_results.csv'), index=False)
 
 # Save representative comments summary
 representatives_summary = {}
@@ -482,10 +515,10 @@ for sentiment, representatives in representative_results.items():
     if len(representatives) > 0:
         representatives_summary[sentiment] = representatives[['text', 'confidence', 'cluster_id', 'cluster_size']].to_dict('records')
 
-with open(os.path.join(base_output_dir, 'representative_comments.json'), 'w', encoding='utf-8') as f:
+with open(os.path.join(OUTPUT_BASE_DIR, 'representative_comments.json'), 'w', encoding='utf-8') as f:
     json.dump(representatives_summary, f, indent=2, ensure_ascii=False)
 
-print(f"\n✅ All results saved to: {base_output_dir}")
+print(f"\n✅ All results saved to: {OUTPUT_BASE_DIR}")
 
 print("\n" + "=" * 80)
 print("SUMMARY OF REPRESENTATIVE COMMENTS")
@@ -511,14 +544,14 @@ print(f"""
    • Processed: {len(df_sample):,} samples
    • Processing time: {total_time/60:.1f} minutes
    • Average accuracy: {performance_summary['accuracy_metrics']['overall_accuracy']:.1%}
-   • Files created: {len(os.listdir(base_output_dir))} output files
+   • Files created: {len(os.listdir(OUTPUT_BASE_DIR))} output files
    
 📁 Output Structure:
-   • {base_output_dir}/positive/ - Positive sentiment data
-   • {base_output_dir}/negative/ - Negative sentiment data  
-   • {base_output_dir}/neutral/ - Neutral sentiment data
-   • {base_output_dir}/visualizations/ - Charts and graphs
-   • {base_output_dir}/vectors/ - Vector analysis data
+   • {OUTPUT_BASE_DIR}/positive/ - Positive sentiment data
+   • {OUTPUT_BASE_DIR}/negative/ - Negative sentiment data  
+   • {OUTPUT_BASE_DIR}/neutral/ - Neutral sentiment data
+   • {OUTPUT_BASE_DIR}/visualizations/ - Charts and graphs
+   • {OUTPUT_BASE_DIR}/vectors/ - Vector analysis data
    
 🎯 Key Insights:
    • Most confident positive: {results_df[results_df['sentiment']=='POSITIVE']['confidence'].max():.3f}
