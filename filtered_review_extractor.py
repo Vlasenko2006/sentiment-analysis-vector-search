@@ -390,5 +390,5 @@ def run_for_file(encoded_path: str):
 
 if __name__ == '__main__':
     # default path (URL-encoded) from previous extractor
-    encoded = "/Users/andreyvlasenko/tst/Request/Senso-ji%20Temple,%20Asakusa.html"
+    encoded = "https://www.tripadvisor.com/Attraction_Review-g14134311-d320447-Reviews-Senso_ji_Temple-Asakusa_Taito_Tokyo_Tokyo_Prefecture_Kanto.html"
     run_for_file(encoded)
