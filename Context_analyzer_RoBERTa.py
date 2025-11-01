@@ -53,20 +53,16 @@ from collections import deque
 SAMPLES_PER_CLASS = 1750          # Number of samples per sentiment class (negative/positive)
 TOTAL_SAMPLES = SAMPLES_PER_CLASS * 2  # Total samples to process (3500)
 
-# Web crawling parameters (NEW)
-ENABLE_WEB_CRAWLING = True        # Enable web subpage analysis
-WEB_CRAWL_DEPTH = 1              # Maximum depth for web crawling (0 = only main page, 1 = direct links, 2 = links from links, etc.)
-MAX_PAGES_PER_DEPTH = 5          # Maximum pages to crawl per depth level
-CRAWL_DELAY = 2.0                # Delay between requests (seconds) - be respectful to servers
-ALLOWED_DOMAINS = []             # Restrict crawling to specific domains (empty = allow all)
+# Text extraction parameters (NEW)
+USE_EXTRACTED_TEXT = True         # Use extracted text files instead of web crawling
+EXTRACTED_TEXT_DIR = "/Users/andreyvlasenko/tst/dNet/extracted_text"  # Directory with extracted text files
 
-# Custom URLs to crawl (NEW) - Set your target websites here
-CUSTOM_CRAWL_URLS = [
-    "hhttps://www.tripadvisor.com/Restaurant_Review-g187147-d9806534-Reviews-Aspic-Paris_Ile_de_France.html"#,
-    # Backup URLs that are more crawl-friendly
- #   "https://httpbin.org/html",  # Test site that allows crawling
-  #  "https://example.com"        # Simple test site
-]
+# Web crawling parameters (DEPRECATED - using extracted text instead)
+ENABLE_WEB_CRAWLING = False       # Disabled - using extracted text files
+WEB_CRAWL_DEPTH = 1              
+MAX_PAGES_PER_DEPTH = 5          
+CRAWL_DELAY = 2.0                
+ALLOWED_DOMAINS = []
 
 # Processing parameters  
 BATCH_SIZE = 100                  # Batch size for sentiment analysis processing
@@ -166,7 +162,125 @@ def analyze_sentiment_enhanced(text):
         'raw_label': raw_label
     }
 
-# Web Crawling Functions (NEW)
+# Web Crawling Functions (DEPRECATED - using extracted text instead)
+def read_extracted_text_files(extracted_text_dir):
+    """
+    Read text blocks from extracted text files
+    
+    Args:
+        extracted_text_dir: Directory containing extracted text files
+    
+    Returns:
+        List of text blocks with metadata
+    """
+    print(f"\n📖 Reading extracted text files from: {extracted_text_dir}")
+    
+    if not os.path.exists(extracted_text_dir):
+        print(f"❌ Directory not found: {extracted_text_dir}")
+        return []
+    
+    txt_files = [f for f in os.listdir(extracted_text_dir) if f.endswith('.txt')]
+    
+    if not txt_files:
+        print(f"❌ No .txt files found in {extracted_text_dir}")
+        return []
+    
+    print(f"✅ Found {len(txt_files)} text file(s)")
+    
+    all_text_blocks = []
+    
+    for txt_file in txt_files:
+        filepath = os.path.join(extracted_text_dir, txt_file)
+        print(f"   Reading: {txt_file}")
+        
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Extract blocks from different sections
+            # Split by common section headers
+            sections = re.split(r'\n(?:RESTAURANT INFORMATION|REVIEWS|RATINGS|DESCRIPTIONS|OTHER TEXT BLOCKS):\n-+\n', content)
+            
+            block_count = 0
+            for section in sections[1:]:  # Skip header
+                # Split by block markers like [Block 1], [Review 1], etc.
+                blocks = re.split(r'\n\[(?:Block|Review) \d+\]\n', section)
+                
+                for block in blocks:
+                    block = block.strip()
+                    # Clean up the block - remove metadata lines
+                    lines = block.split('\n')
+                    cleaned_lines = []
+                    for line in lines:
+                        # Skip metadata lines (numbers followed by periods at start)
+                        if re.match(r'^\d+\.\s', line):
+                            continue
+                        cleaned_lines.append(line)
+                    
+                    cleaned_block = '\n'.join(cleaned_lines).strip()
+                    
+                    if len(cleaned_block) > 30:  # Only meaningful blocks
+                        all_text_blocks.append({
+                            'text': cleaned_block,
+                            'source_file': txt_file,
+                            'length': len(cleaned_block)
+                        })
+                        block_count += 1
+            
+            print(f"      ✅ Extracted {block_count} text blocks")
+            
+        except Exception as e:
+            print(f"      ❌ Error reading {txt_file}: {e}")
+    
+    print(f"\n✅ Total text blocks extracted: {len(all_text_blocks)}")
+    return all_text_blocks
+
+def integrate_extracted_text_with_db(text_blocks, db_path):
+    """
+    Integrate extracted text blocks with database
+    
+    Args:
+        text_blocks: List of text block dictionaries
+        db_path: Path to database
+    """
+    if not text_blocks:
+        return
+    
+    print(f"\n💾 Integrating {len(text_blocks)} text blocks with database...")
+    
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Create extracted_text_data table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS extracted_text_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_file TEXT NOT NULL,
+                block_text TEXT NOT NULL,
+                block_length INTEGER,
+                extraction_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Clear old data
+        cursor.execute('DELETE FROM extracted_text_data')
+        
+        for block in text_blocks:
+            cursor.execute('''
+                INSERT INTO extracted_text_data (source_file, block_text, block_length)
+                VALUES (?, ?, ?)
+            ''', (block['source_file'], block['text'], block['length']))
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"✅ Integrated {len(text_blocks)} text blocks into database")
+        
+    except Exception as e:
+        print(f"❌ Error integrating text blocks: {e}")
+
+# Old web crawling function kept for reference but not used
 def is_valid_url(url, allowed_domains=None):
     """Check if URL is valid and within allowed domains"""
     try:
@@ -366,41 +480,35 @@ def integrate_web_data_with_db(crawled_data, db_path):
     except Exception as e:
         print(f"❌ Error integrating web data: {e}")
 
-def load_combined_dataset(db_path, include_web_crawl=False):
+def load_combined_dataset(db_path, include_extracted_text=False):
     """
-    Load dataset combining existing comment_blocks with optional web crawl data
+    Load dataset combining existing comment_blocks with optional extracted text data
     """
     try:
         conn = sqlite3.connect(db_path)
         
-        if include_web_crawl:
-            # Check if web_crawl_data table exists
+        if include_extracted_text:
+            # Check if extracted_text_data table exists
             cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='web_crawl_data';")
-            has_web_data = cursor.fetchone() is not None
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='extracted_text_data';")
+            has_extracted_data = cursor.fetchone() is not None
             
-            if has_web_data:
-                # Combine both datasets
+            if has_extracted_data:
+                # Use extracted text data
                 query = """
-                    SELECT 'comment' as source, block_text as text, score, length, is_candidate, file_path as source_info
-                    FROM comment_blocks 
-                    WHERE score >= 0.3 AND length >= 30
-                    
-                    UNION ALL
-                    
-                    SELECT 'web_crawl' as source, block_text as text, 0.5 as score, block_length as length, 
-                           0 as is_candidate, url as source_info
-                    FROM web_crawl_data
+                    SELECT 'extracted_text' as source, block_text as text, 
+                           0.5 as score, block_length as length, 
+                           0 as is_candidate, source_file as source_info
+                    FROM extracted_text_data
                     WHERE block_length >= 30
-                    
-                    ORDER BY score DESC, length DESC
+                    ORDER BY block_length DESC
                 """
-                print("📊 Loading combined dataset (comments + web crawl data)")
+                print("📊 Loading dataset from extracted text files")
             else:
-                print("⚠️  No web crawl data found, using comment_blocks only")
-                include_web_crawl = False
+                print("⚠️  No extracted text data found, using comment_blocks")
+                include_extracted_text = False
         
-        if not include_web_crawl:
+        if not include_extracted_text:
             # Original query - comments only
             query = """
                 SELECT 'comment' as source, block_text as text, score, length, is_candidate, file_path as source_info
@@ -486,108 +594,37 @@ print("=" * 80)
 
 print(f"\n📊 Loading dataset from: {path_db}")
 
-# Web crawling section (NEW)
-if ENABLE_WEB_CRAWLING:
+# Extracted text reading section (NEW)
+if USE_EXTRACTED_TEXT:
     print("\n" + "=" * 80)
-    print("WEB CRAWLING ENABLED - EXTRACTING ADDITIONAL CONTENT")
+    print("READING EXTRACTED TEXT FILES")
     print("=" * 80)
     
-    # Get source URLs from existing database for crawling
     try:
-        base_urls = []
-        crawl_stats = track_successful_crawls()  # Initialize tracking
+        # Read text blocks from extracted text files
+        text_blocks = read_extracted_text_files(EXTRACTED_TEXT_DIR)
         
-        # Use custom URLs if provided, otherwise extract from database
-        if CUSTOM_CRAWL_URLS:
-            print(f"🌐 Using {len(CUSTOM_CRAWL_URLS)} custom URLs for crawling:")
-            for url in CUSTOM_CRAWL_URLS:
-                print(f"   • {url}")
-                # Extract base URL for domain-based crawling
-                parsed = urlparse(url)
-                base_url = f"{parsed.scheme}://{parsed.netloc}"
-                base_urls.append(url)  # Use full URL as provided
+        if text_blocks:
+            # Integrate with database
+            integrate_extracted_text_with_db(text_blocks, path_db)
+            print(f"\n✅ Successfully integrated {len(text_blocks)} text blocks")
         else:
-            # Original behavior - extract from database
-            conn = sqlite3.connect(path_db)
-            cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT file_path FROM comment_blocks LIMIT 3")  # Start with a few URLs
-            source_urls = [row[0] for row in cursor.fetchall()]
-            conn.close()
-            
-            # Convert file paths to base URLs for crawling
-            for file_path in source_urls:
-                if file_path.startswith('http'):
-                    # Extract base URL
-                    parsed = urlparse(file_path)
-                    base_url = f"{parsed.scheme}://{parsed.netloc}"
-                    base_urls.append(base_url)
-            
-            print(f"🌐 Found {len(base_urls)} URLs from database for crawling:")
-            for url in base_urls:
-                print(f"   • {url}")
-        
-        # Remove duplicates
-        base_urls = list(set(base_urls))
-            
-        if base_urls:
-            # Crawl each base URL - try all of them to find working sites
-            all_crawled_data = []
-            successful_crawls = 0
-            
-            for i, base_url in enumerate(base_urls):
-                print(f"\n🎯 Trying URL {i+1}/{len(base_urls)}: {base_url}")
-                try:
-                    crawled_data = crawl_website_depth(
-                        start_url=base_url,
-                        max_depth=WEB_CRAWL_DEPTH,
-                        max_pages_per_depth=MAX_PAGES_PER_DEPTH,
-                        delay=CRAWL_DELAY
-                    )
-                    if crawled_data:
-                        all_crawled_data.extend(crawled_data)
-                        successful_crawls += 1
-                        total_text_blocks = sum(len(page['text_blocks']) for page in crawled_data)
-                        print(f"   ✅ Success! Got {len(crawled_data)} pages from this URL")
-                        
-                        # Update statistics for successful crawl
-                        crawl_stats = update_crawl_stats(
-                            crawl_stats, base_url, True, 
-                            len(crawled_data), total_text_blocks
-                        )
-                    else:
-                        print(f"   ❌ Failed to get content from this URL")
-                        crawl_stats = update_crawl_stats(
-                            crawl_stats, base_url, False, 
-                            error_msg="No content extracted"
-                        )
-                except Exception as e:
-                    print(f"   ❌ Failed to get content from this URL")
-                    crawl_stats = update_crawl_stats(
-                        crawl_stats, base_url, False, 
-                        error_msg=str(e)
-                    )
-                
-                # Stop if we have enough data or tried reasonable number
-                if successful_crawls >= 2 or len(all_crawled_data) >= 5:
-                    print(f"   🎉 Got enough data ({len(all_crawled_data)} pages), stopping here")
-                    break
-            
-            # Print crawling statistics
-            print_crawl_statistics(crawl_stats)
-            
-            # Integrate crawled data with database
-            if all_crawled_data:
-                integrate_web_data_with_db(all_crawled_data, path_db)
-        else:
-            print("⚠️  No valid URLs found for crawling")
-            print_crawl_statistics(crawl_stats)
+            print("\n⚠️  No text blocks found, will try database only")
+            USE_EXTRACTED_TEXT = False
             
     except Exception as e:
-        print(f"❌ Error during web crawling: {e}")
+        print(f"\n❌ Error reading extracted text: {e}")
+        print("   Falling back to database only")
+        USE_EXTRACTED_TEXT = False
+
+# Web crawling section (DEPRECATED)
+if ENABLE_WEB_CRAWLING:
+    print("\n⚠️  Web crawling is deprecated. Use USE_EXTRACTED_TEXT instead.")
+    print("   Set USE_EXTRACTED_TEXT = True and provide extracted text files.")
 
 try:
-    # Load dataset (with or without web crawl data)
-    df_dataset = load_combined_dataset(path_db, include_web_crawl=ENABLE_WEB_CRAWLING)
+    # Load dataset (with or without extracted text data)
+    df_dataset = load_combined_dataset(path_db, include_extracted_text=USE_EXTRACTED_TEXT)
     
     if df_dataset is None or len(df_dataset) == 0:
         print("❌ Error: No data loaded from database")
@@ -617,13 +654,13 @@ try:
     
     print(f"✅ Selected {len(df_sample)} samples for analysis!")
     
-    # Show distribution by score ranges (handle both comment and web crawl data)
+    # Show distribution by score ranges (handle both comment and extracted text data)
     print(f"\n📈 Sample Distribution by Quality Score:")
-    if ENABLE_WEB_CRAWLING and 'source' in df_sample.columns:
+    if USE_EXTRACTED_TEXT and 'source' in df_sample.columns:
         # Show breakdown by source
         for source in df_sample['source'].unique():
             source_data = df_sample[df_sample['source'] == source]
-            print(f"\n   {source.title()} Data ({len(source_data)} samples):")
+            print(f"\n   {source.title().replace('_', ' ')} Data ({len(source_data)} samples):")
             
             if source == 'comment' and 'score' in source_data.columns:
                 score_ranges = {
@@ -636,7 +673,7 @@ try:
                     percentage = (count / len(source_data)) * 100 if len(source_data) > 0 else 0
                     print(f"     {range_name}: {count:,} samples ({percentage:.1f}%)")
             else:
-                print(f"     Web crawled content: {len(source_data)} text blocks")
+                print(f"     Extracted text content: {len(source_data)} text blocks")
     else:
         # Original score distribution for comment data only
         if 'score' in df_sample.columns:
