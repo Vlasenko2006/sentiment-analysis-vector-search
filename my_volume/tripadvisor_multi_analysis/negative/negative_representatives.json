@@ -1,0 +1,47 @@
+[
+  {
+    "text":"Way too big and overwhelming. You need at least 2 days to see everything properly. The crowds around Mona Lisa are insane.",
+    "rating":3,
+    "reviewer":"OverwhelmedVisitor",
+    "location":"Louvre Museum Paris",
+    "source_url":"https:\/\/www.tripadvisor.com\/Demo-louvre_museum-page1.html",
+    "url_index":3,
+    "page":1,
+    "review_id":"demo_louvre_museum_1_18",
+    "sentiment":"NEGATIVE",
+    "confidence":0.9967449903,
+    "raw_label":"NEGATIVE",
+    "cluster_id":0,
+    "cluster_size":4
+  },
+  {
+    "text":"Disappointing visit. Too crowded, poor organization, and many exhibits were closed. The audio guide was not worth the extra cost.",
+    "rating":2,
+    "reviewer":"UnhappyCustomer",
+    "location":"Louvre Museum Paris",
+    "source_url":"https:\/\/www.tripadvisor.com\/Demo-louvre_museum-page1.html",
+    "url_index":3,
+    "page":1,
+    "review_id":"demo_louvre_museum_1_22",
+    "sentiment":"NEGATIVE",
+    "confidence":0.9998030066,
+    "raw_label":"NEGATIVE",
+    "cluster_id":1,
+    "cluster_size":4
+  },
+  {
+    "text":"Very crowded and expensive. The lines were extremely long and the elevator was packed. The view is nice but not worth the hassle and cost.",
+    "rating":2,
+    "reviewer":"Disappointed_Tourist",
+    "location":"Eiffel Tower Paris",
+    "source_url":"https:\/\/www.tripadvisor.com\/Demo-eiffel_tower-page1.html",
+    "url_index":1,
+    "page":1,
+    "review_id":"demo_eiffel_tower_1_2",
+    "sentiment":"NEGATIVE",
+    "confidence":0.9732926488,
+    "raw_label":"NEGATIVE",
+    "cluster_id":2,
+    "cluster_size":4
+  }
+]

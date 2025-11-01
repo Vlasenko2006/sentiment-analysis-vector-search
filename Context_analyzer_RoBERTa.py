@@ -45,20 +45,6 @@ from urllib.parse import urljoin, urlparse
 import time as time_module
 from collections import deque
 
-# PDF report generation
-try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-    from datetime import datetime
-    PDF_AVAILABLE = True
-except ImportError:
-    print("⚠️ ReportLab not available. Install with: pip install reportlab")
-    PDF_AVAILABLE = False
-
 # ============================================================================
 # CONFIGURATION PARAMETERS
 # ============================================================================
@@ -76,9 +62,10 @@ ALLOWED_DOMAINS = []             # Restrict crawling to specific domains (empty 
 
 # Custom URLs to crawl (NEW) - Set your target websites here
 CUSTOM_CRAWL_URLS = [
-    "https://www.tripadvisor.com/Restaurant_Review-g1066456-d1373933-Reviews-Sometaro-Asakusa_Taito_Tokyo_Tokyo_Prefecture_Kanto.html",
-    # "https://www.yelp.com/biz/some-restaurant-location",
-    # "https://example-review-site.com"
+    "hhttps://www.tripadvisor.com/Restaurant_Review-g187147-d9806534-Reviews-Aspic-Paris_Ile_de_France.html"#,
+    # Backup URLs that are more crawl-friendly
+ #   "https://httpbin.org/html",  # Test site that allows crawling
+  #  "https://example.com"        # Simple test site
 ]
 
 # Processing parameters  
@@ -152,6 +139,10 @@ print(f"📁 Created output directories in: {OUTPUT_BASE_DIR}")
 # Enhanced sentiment analysis function
 def analyze_sentiment_enhanced(text):
     """Enhanced sentiment analysis with 3-class simulation"""
+    # Truncate text if too long for the model (512 tokens max, ~400 chars safe)
+    if len(text) > 400:
+        text = text[:400] + "..."
+    
     result = pipe(text)
     raw_label = result[0]['label']
     confidence = result[0]['score']
@@ -264,7 +255,12 @@ def crawl_website_depth(start_url, max_depth=2, max_pages_per_depth=10, delay=1.
     
     session = requests.Session()
     session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
     })
     
     depth_counts = {}  # Track pages crawled per depth
@@ -422,6 +418,67 @@ def load_combined_dataset(db_path, include_web_crawl=False):
         print(f"❌ Error loading combined dataset: {e}")
         return None
 
+# Web crawling tracking functions
+def track_successful_crawls():
+    """Track and return information about successfully crawled websites"""
+    crawl_stats = {
+        'successful_sites': [],
+        'failed_sites': [],
+        'total_pages': 0,
+        'total_text_blocks': 0
+    }
+    return crawl_stats
+
+def update_crawl_stats(crawl_stats, url, success, pages_crawled=0, text_blocks=0, error_msg=""):
+    """Update crawling statistics"""
+    site_info = {
+        'url': url,
+        'pages': pages_crawled,
+        'text_blocks': text_blocks,
+        'domain': url.split('/')[2] if '://' in url else url
+    }
+    
+    if success:
+        crawl_stats['successful_sites'].append(site_info)
+        crawl_stats['total_pages'] += pages_crawled
+        crawl_stats['total_text_blocks'] += text_blocks
+    else:
+        site_info['error'] = error_msg
+        crawl_stats['failed_sites'].append(site_info)
+    
+    return crawl_stats
+
+def print_crawl_statistics(crawl_stats):
+    """Print comprehensive crawling statistics"""
+    print("\n" + "=" * 60)
+    print("🌐 WEB CRAWLING STATISTICS")
+    print("=" * 60)
+    
+    print(f"📊 Overall Results:")
+    print(f"   • Successful sites: {len(crawl_stats['successful_sites'])}")
+    print(f"   • Failed sites: {len(crawl_stats['failed_sites'])}")
+    print(f"   • Total pages crawled: {crawl_stats['total_pages']}")
+    print(f"   • Total text blocks extracted: {crawl_stats['total_text_blocks']}")
+    
+    if crawl_stats['successful_sites']:
+        print(f"\n✅ Successfully Processed Sites:")
+        for i, site in enumerate(crawl_stats['successful_sites'], 1):
+            print(f"   {i}. {site['domain']}")
+            print(f"      URL: {site['url']}")
+            print(f"      Pages: {site['pages']}, Text blocks: {site['text_blocks']}")
+    
+    if crawl_stats['failed_sites']:
+        print(f"\n❌ Failed Sites:")
+        for i, site in enumerate(crawl_stats['failed_sites'], 1):
+            print(f"   {i}. {site['domain']}")
+            print(f"      URL: {site['url']}")
+            print(f"      Error: {site['error']}")
+    
+    if not crawl_stats['successful_sites'] and not crawl_stats['failed_sites']:
+        print("   ℹ️  No web crawling attempted or cached data used")
+    
+    print("=" * 60)
+
 # Load and process samples from filtered_reviews.db
 print("\n" + "=" * 80)
 print("LOADING AND PROCESSING SAMPLES FROM FILTERED_REVIEWS.DB")
@@ -438,6 +495,7 @@ if ENABLE_WEB_CRAWLING:
     # Get source URLs from existing database for crawling
     try:
         base_urls = []
+        crawl_stats = track_successful_crawls()  # Initialize tracking
         
         # Use custom URLs if provided, otherwise extract from database
         if CUSTOM_CRAWL_URLS:
@@ -472,22 +530,57 @@ if ENABLE_WEB_CRAWLING:
         base_urls = list(set(base_urls))
             
         if base_urls:
-            # Crawl each base URL
+            # Crawl each base URL - try all of them to find working sites
             all_crawled_data = []
-            for base_url in base_urls[:2]:  # Limit to first 2 URLs for demo
-                crawled_data = crawl_website_depth(
-                    start_url=base_url,
-                    max_depth=WEB_CRAWL_DEPTH,
-                    max_pages_per_depth=MAX_PAGES_PER_DEPTH,
-                    delay=CRAWL_DELAY
-                )
-                all_crawled_data.extend(crawled_data)
+            successful_crawls = 0
+            
+            for i, base_url in enumerate(base_urls):
+                print(f"\n🎯 Trying URL {i+1}/{len(base_urls)}: {base_url}")
+                try:
+                    crawled_data = crawl_website_depth(
+                        start_url=base_url,
+                        max_depth=WEB_CRAWL_DEPTH,
+                        max_pages_per_depth=MAX_PAGES_PER_DEPTH,
+                        delay=CRAWL_DELAY
+                    )
+                    if crawled_data:
+                        all_crawled_data.extend(crawled_data)
+                        successful_crawls += 1
+                        total_text_blocks = sum(len(page['text_blocks']) for page in crawled_data)
+                        print(f"   ✅ Success! Got {len(crawled_data)} pages from this URL")
+                        
+                        # Update statistics for successful crawl
+                        crawl_stats = update_crawl_stats(
+                            crawl_stats, base_url, True, 
+                            len(crawled_data), total_text_blocks
+                        )
+                    else:
+                        print(f"   ❌ Failed to get content from this URL")
+                        crawl_stats = update_crawl_stats(
+                            crawl_stats, base_url, False, 
+                            error_msg="No content extracted"
+                        )
+                except Exception as e:
+                    print(f"   ❌ Failed to get content from this URL")
+                    crawl_stats = update_crawl_stats(
+                        crawl_stats, base_url, False, 
+                        error_msg=str(e)
+                    )
+                
+                # Stop if we have enough data or tried reasonable number
+                if successful_crawls >= 2 or len(all_crawled_data) >= 5:
+                    print(f"   🎉 Got enough data ({len(all_crawled_data)} pages), stopping here")
+                    break
+            
+            # Print crawling statistics
+            print_crawl_statistics(crawl_stats)
             
             # Integrate crawled data with database
             if all_crawled_data:
                 integrate_web_data_with_db(all_crawled_data, path_db)
         else:
             print("⚠️  No valid URLs found for crawling")
+            print_crawl_statistics(crawl_stats)
             
     except Exception as e:
         print(f"❌ Error during web crawling: {e}")
@@ -740,205 +833,6 @@ def extract_source_info_from_db(db_path):
             
     except Exception as e:
         return f"Database Source: {os.path.basename(db_path)}"
-
-def generate_pdf_report(results_df, representative_results, performance_summary, 
-                       folders, db_path, total_time):
-    """Generate comprehensive PDF report of the analysis"""
-    
-    if not PDF_AVAILABLE:
-        print("❌ Cannot generate PDF report. Install reportlab: pip install reportlab")
-        return None
-    
-    # Create PDF file path
-    pdf_path = os.path.join(folders['visualizations'], 'sentiment_analysis_report.pdf')
-    
-    # Create PDF document
-    doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
-    story = []
-    
-    # Get styles
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30,
-        alignment=TA_CENTER,
-        textColor=colors.Color(0, 0, 0.8)  # Dark blue
-    )
-    
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=16,
-        spaceAfter=12,
-        spaceBefore=20,
-        textColor=colors.Color(0.8, 0, 0)  # Dark red
-    )
-    
-    subheading_style = ParagraphStyle(
-        'CustomSubHeading',
-        parent=styles['Heading3'],
-        fontSize=12,
-        spaceAfter=8,
-        spaceBefore=15,
-        textColor=colors.Color(0, 0, 0.8)  # Blue
-    )
-    
-    # Title page
-    story.append(Paragraph("RoBERTa Sentiment Analysis Report", title_style))
-    story.append(Spacer(1, 20))
-    
-    # Source information
-    source_info = extract_source_info_from_db(db_path)
-    story.append(Paragraph(f"<b>Data Source:</b> {source_info}", styles['Normal']))
-    story.append(Spacer(1, 10))
-    
-    # Analysis date and summary
-    story.append(Paragraph(f"<b>Analysis Date:</b> {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
-    story.append(Paragraph(f"<b>Total Comments Analyzed:</b> {len(results_df)}", styles['Normal']))
-    story.append(Paragraph(f"<b>Processing Time:</b> {total_time/60:.1f} minutes", styles['Normal']))
-    story.append(Paragraph(f"<b>Neural Network Model:</b> DistilBERT-based sentiment classifier", styles['Normal']))
-    story.append(Spacer(1, 20))
-    
-    # Executive Summary
-    story.append(Paragraph("Executive Summary", heading_style))
-    
-    sentiment_dist = performance_summary.get('sentiment_distribution', {})
-    total_comments = sum(sentiment_dist.values())
-    
-    summary_text = f"""
-    This report presents a comprehensive sentiment analysis of {total_comments} user comments extracted 
-    from {source_info} using advanced neural network classification. The analysis employed DistilBERT 
-    for sentiment classification and TF-IDF vectorization with K-means clustering for representative 
-    comment selection.
-    
-    <b>Key Findings:</b><br/>
-    • Positive Comments: {sentiment_dist.get('POSITIVE', 0)} ({sentiment_dist.get('POSITIVE', 0)/total_comments*100:.1f}%)<br/>
-    • Negative Comments: {sentiment_dist.get('NEGATIVE', 0)} ({sentiment_dist.get('NEGATIVE', 0)/total_comments*100:.1f}%)<br/>
-    • Neutral Comments: {sentiment_dist.get('NEUTRAL', 0)} ({sentiment_dist.get('NEUTRAL', 0)/total_comments*100:.1f}%)<br/>
-    
-    The analysis utilized vector search and clustering algorithms to identify the most representative 
-    comments from each sentiment category, providing insights into common themes and user experiences.
-    """
-    
-    story.append(Paragraph(summary_text, styles['Normal']))
-    story.append(PageBreak())
-    
-    # Methodology
-    story.append(Paragraph("Methodology", heading_style))
-    methodology_text = """
-    <b>1. Data Extraction:</b> Comments were pre-filtered using neural network-based quality scoring 
-    to identify genuine user-generated content versus website boilerplate.<br/><br/>
-    
-    <b>2. Sentiment Classification:</b> DistilBERT model processed each comment to classify sentiment 
-    as Positive, Negative, or Neutral with confidence scores.<br/><br/>
-    
-    <b>3. Vector Search & Clustering:</b> TF-IDF vectorization transformed text into numerical 
-    representations, followed by K-means clustering to group similar comments.<br/><br/>
-    
-    <b>4. Representative Selection:</b> For each cluster, the comment closest to the centroid 
-    was selected as the most representative example of that theme.
-    """
-    
-    story.append(Paragraph(methodology_text, styles['Normal']))
-    story.append(Spacer(1, 20))
-    
-    # Add visualizations if they exist
-    viz_files = ['sentiment_analysis_overview.png', 'sentiment_wordclouds.png', 'word_frequency_analysis.png']
-    
-    for viz_file in viz_files:
-        viz_path = os.path.join(folders['visualizations'], viz_file)
-        if os.path.exists(viz_path):
-            story.append(Paragraph(f"Analysis Visualization: {viz_file.replace('_', ' ').title()}", subheading_style))
-            try:
-                # Add image with appropriate sizing
-                img = Image(viz_path, width=7*inch, height=4*inch)
-                story.append(img)
-                story.append(Spacer(1, 15))
-            except Exception as e:
-                story.append(Paragraph(f"[Visualization not available: {str(e)}]", styles['Italic']))
-    
-    story.append(PageBreak())
-    
-    # Representative Comments Section
-    story.append(Paragraph("Most Representative Comments", heading_style))
-    
-    for sentiment in ['POSITIVE', 'NEGATIVE', 'NEUTRAL']:
-        if sentiment in representative_results and len(representative_results[sentiment]) > 0:
-            story.append(Paragraph(f"{sentiment.title()} Comments", subheading_style))
-            
-            representatives = representative_results[sentiment].sort_values('confidence', ascending=False)
-            
-            # Create table for top 5 representative comments
-            table_data = [['Rank', 'Confidence', 'Cluster Info', 'Comment Text']]
-            
-            for i, (_, row) in enumerate(representatives.head(5).iterrows(), 1):
-                comment_text = str(row['text'])
-                if len(comment_text) > 150:
-                    comment_text = comment_text[:150] + "..."
-                
-                cluster_info = f"Cluster {row.get('cluster_id', 'N/A')} (Size: {row.get('cluster_size', 'N/A')})"
-                
-                table_data.append([
-                    str(i),
-                    f"{row['confidence']:.3f}",
-                    cluster_info,
-                    comment_text
-                ])
-            
-            # Create and style table
-            table = Table(table_data, colWidths=[0.5*inch, 1*inch, 1.5*inch, 4*inch])
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#808080')),  # Grey
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#F5F5DC')),   # WhiteSmoke
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5DC')), # Beige
-                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#000000')),    # Black
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ]))
-            
-            story.append(table)
-            story.append(Spacer(1, 20))
-    
-    # Technical Details
-    story.append(PageBreak())
-    story.append(Paragraph("Technical Details", heading_style))
-    
-    tech_details = f"""
-    <b>Processing Configuration:</b><br/>
-    • TF-IDF Features: {TFIDF_MAX_FEATURES}<br/>
-    • Minimum Document Frequency: {TFIDF_MIN_DF}<br/>
-    • Maximum Document Frequency: {TFIDF_MAX_DF}<br/>
-    • Clusters per Sentiment: {N_REPRESENTATIVES}<br/>
-    • Confidence Threshold: {CONFIDENCE_THRESHOLD}<br/><br/>
-    
-    <b>Performance Metrics:</b><br/>
-    • Average Original Quality Score: {performance_summary.get('score_distribution', {}).get('avg_original_score', 'N/A'):.3f}<br/>
-    • Average Sentiment Confidence: {performance_summary.get('score_distribution', {}).get('avg_sentiment_confidence', 'N/A'):.3f}<br/>
-    • High-Quality Candidates: {performance_summary.get('score_distribution', {}).get('candidates_count', 'N/A')}<br/>
-    • Processing Rate: {len(results_df)/(total_time/60):.1f} comments/minute<br/><br/>
-    
-    <b>Database Information:</b><br/>
-    • Source Database: {os.path.basename(db_path)}<br/>
-    • Total Records Processed: {len(results_df)}<br/>
-    • Analysis Timestamp: {datetime.now().isoformat()}
-    """
-    
-    story.append(Paragraph(tech_details, styles['Normal']))
-    
-    # Build PDF
-    try:
-        doc.build(story)
-        print(f"📄 PDF report generated: {pdf_path}")
-        return pdf_path
-    except Exception as e:
-        print(f"❌ Error generating PDF report: {e}")
-        return None
 
 # Find representative comments for each sentiment
 print("\n🔍 Finding most representative comments...")
@@ -1214,31 +1108,6 @@ print(f"""
    • High-quality candidates: {performance_summary['score_distribution']['candidates_count']}
 """)
 
-# Generate comprehensive PDF report
-print("\n" + "=" * 80)
-print("GENERATING PDF REPORT")
-print("=" * 80)
-
-print("\n📄 Creating comprehensive PDF report...")
-pdf_path = generate_pdf_report(
-    results_df=results_df,
-    representative_results=representative_results,
-    performance_summary=performance_summary,
-    folders=folders,
-    db_path=path_db,
-    total_time=total_time
-)
-
-#if pdf_path:
-#    print(f"✅ PDF report successfully generated: {pdf_path}")
-#    print("📋 Report includes:")
-#    print("   • Executive summary with source information")
-#    print("   • Methodology and technical details")
-#    print("   • Sentiment analysis visualizations")
-#    print("   • Most representative comments by sentiment")
-#    print("   • Performance metrics and processing statistics")
-#else:
-#    print("❌ PDF report generation failed")
-
-print(f"\n📁 All outputs saved to: {OUTPUT_BASE_DIR}")
+print(f"\n� All outputs saved to: {OUTPUT_BASE_DIR}")
 print("🎉 Complete analysis package ready for review!")
+print("📄 Note: Use the separate generate_pdf_only.py script to create PDF reports")

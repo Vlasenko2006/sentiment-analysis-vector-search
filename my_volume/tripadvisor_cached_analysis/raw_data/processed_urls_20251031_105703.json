@@ -1,0 +1,21 @@
+{
+  "initial_urls": [
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320023-Reviews-Tokyo_Skytree-Sumida_Tokyo.html",
+    "https://www.tripadvisor.com/Attractions-g298184-Activities-Tokyo_Prefecture_Kanto.html"
+  ],
+  "successful_urls": [
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320023-Reviews-Tokyo_Skytree-Sumida_Tokyo_Prefecture_Kanto.html",
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320041-Reviews-Senso_ji_Temple-Taito_Tokyo_Prefecture_Kanto.html",
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320019-Reviews-Shibuya_Crossing-Shibuya_Tokyo_Prefecture_Kanto.html",
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320032-Reviews-Tsukiji_Fish_Market-Chuo_Tokyo_Prefecture_Kanto.html",
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320028-Reviews-Imperial_Palace-Chiyoda_Tokyo_Prefecture_Kanto.html",
+    "https://www.tripadvisor.com/Attraction_Review-g298184-d320025-Reviews-Meiji_Shrine-Shibuya_Tokyo_Prefecture_Kanto.html"
+  ],
+  "cache_stats": {
+    "hits": 0,
+    "downloads": 0,
+    "total_files": 0,
+    "cache_size_mb": 0
+  },
+  "timestamp": "20251031_105703"
+}

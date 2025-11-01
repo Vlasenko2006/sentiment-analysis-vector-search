@@ -1,0 +1,74 @@
+[
+  {
+    "text": "Very crowded and expensive. The lines were extremely long and the elevator was packed. The view is nice but not worth the hassle and cost.",
+    "rating": 2,
+    "date": "2024-10-14",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_2",
+    "helpful_votes": 23,
+    "review_id": "paris_review_002",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9732926487922668,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Overrated tourist trap. Too many people, overpriced tickets, and the security checks take forever. Paris has better attractions to visit.",
+    "rating": 2,
+    "date": "2024-10-12",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_4",
+    "helpful_votes": 2,
+    "review_id": "paris_review_004",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9973741769790649,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Way too big and overwhelming. You need at least 2 days to see everything properly. The crowds around Mona Lisa are insane.",
+    "rating": 3,
+    "date": "2024-10-09",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_7",
+    "helpful_votes": 19,
+    "review_id": "paris_review_007",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9967449903488159,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Disappointing visit. Too crowded, poor organization, and many exhibits were closed. The audio guide was not worth the extra cost.",
+    "rating": 2,
+    "date": "2024-10-07",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_9",
+    "helpful_votes": 7,
+    "review_id": "paris_review_009",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9998030066490173,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Nice church but the area is full of scammers and pickpockets. Be very careful with your belongings in Montmartre.",
+    "rating": 2,
+    "date": "2024-09-27",
+    "attraction": "Sacré-Cœur",
+    "reviewer": "TravelLover_19",
+    "helpful_votes": 2,
+    "review_id": "paris_review_019",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9958380460739136,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Boring and overpriced. You see the same buildings you can see from the street. The commentary was not interesting.",
+    "rating": 2,
+    "date": "2024-09-24",
+    "attraction": "Seine River Cruise",
+    "reviewer": "TravelLover_22",
+    "helpful_votes": 4,
+    "review_id": "paris_review_022",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9997960925102234,
+    "raw_label": "NEGATIVE"
+  }
+]

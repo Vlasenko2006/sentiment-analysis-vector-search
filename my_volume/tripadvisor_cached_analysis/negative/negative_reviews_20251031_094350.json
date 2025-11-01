@@ -1,0 +1,86 @@
+[
+  {
+    "text": "Very crowded and expensive. Had to wait 2 hours in line and the ticket prices are outrageous. The view is nice but not worth the hassle and cost.",
+    "rating": 2,
+    "reviewer": "BudgetTraveler",
+    "location": "Tokyo Skytree",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320023-Reviews-Tokyo_Skytree-Sumida_Tokyo_Prefecture_Kanto.html",
+    "url_index": 1,
+    "review_id": "tokyo_sample_1_1",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9961764812469482,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Too touristy and crowded. Hard to appreciate the temple with so many people taking photos. The surrounding shops are overpriced tourist traps.",
+    "rating": 2,
+    "reviewer": "AuthenticitySeeker",
+    "location": "Senso-ji Temple",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320041-Reviews-Senso_ji_Temple-Taito_Tokyo_Prefecture_Kanto.html",
+    "url_index": 2,
+    "review_id": "tokyo_sample_2_5",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9983516931533813,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Too touristy and crowded. Hard to appreciate the temple with so many people taking photos. The surrounding shops are overpriced tourist traps.",
+    "rating": 2,
+    "reviewer": "AuthenticitySeeker",
+    "location": "Senso-ji Temple",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320019-Reviews-Shibuya_Crossing-Shibuya_Tokyo_Prefecture_Kanto.html",
+    "url_index": 3,
+    "review_id": "tokyo_sample_3_6",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9983516931533813,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Just a busy intersection with lots of people. Don't understand the hype. It's crowded, noisy, and there's nothing special about it except the crowds.",
+    "rating": 2,
+    "reviewer": "Unimpressed",
+    "location": "Shibuya Crossing",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320032-Reviews-Tsukiji_Fish_Market-Chuo_Tokyo_Prefecture_Kanto.html",
+    "url_index": 4,
+    "review_id": "tokyo_sample_4_10",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9982074499130249,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Disappointed - most tourist areas have moved to Toyosu. What's left is overcrowded and touristy. The famous sushi shops have huge lines and high prices.",
+    "rating": 3,
+    "reviewer": "MarketVisitor",
+    "location": "Tsukiji Fish Market",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320028-Reviews-Imperial_Palace-Chiyoda_Tokyo_Prefecture_Kanto.html",
+    "url_index": 5,
+    "review_id": "tokyo_sample_5_14",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9953025579452515,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Disappointed - most tourist areas have moved to Toyosu. What's left is overcrowded and touristy. The famous sushi shops have huge lines and high prices.",
+    "rating": 3,
+    "reviewer": "MarketVisitor",
+    "location": "Tsukiji Fish Market",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320025-Reviews-Meiji_Shrine-Shibuya_Tokyo_Prefecture_Kanto.html",
+    "url_index": 6,
+    "review_id": "tokyo_sample_6_15",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9953025579452515,
+    "raw_label": "NEGATIVE"
+  },
+  {
+    "text": "Most of the palace is closed to public and you can only see it from outside. The gardens are nice but nothing extraordinary. Expected more.",
+    "rating": 3,
+    "reviewer": "PalaceVisitor",
+    "location": "Tokyo Imperial Palace",
+    "source_url": "https://www.tripadvisor.com/Attraction_Review-g298184-d320025-Reviews-Meiji_Shrine-Shibuya_Tokyo_Prefecture_Kanto.html",
+    "url_index": 6,
+    "review_id": "tokyo_sample_6_17",
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9712391495704651,
+    "raw_label": "NEGATIVE"
+  }
+]

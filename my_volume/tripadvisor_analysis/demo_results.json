@@ -1,0 +1,106 @@
+[
+  {
+    "text": "Amazing hotel! The staff was incredibly helpful and the room was spotless. Breakfast was delicious.",
+    "review_id": "review_1",
+    "length": 99,
+    "sentiment": "POSITIVE",
+    "confidence": 0.7,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Absolutely loved our stay here. The spa was fantastic and the pool area was beautiful.",
+    "review_id": "review_2",
+    "length": 86,
+    "sentiment": "POSITIVE",
+    "confidence": 0.9,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Excellent service from check-in to check-out. Highly recommend this place!",
+    "review_id": "review_3",
+    "length": 74,
+    "sentiment": "POSITIVE",
+    "confidence": 0.7,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Beautiful hotel with stunning views. Great value for money.",
+    "review_id": "review_4",
+    "length": 59,
+    "sentiment": "POSITIVE",
+    "confidence": 0.8,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Perfect location right in the heart of the city. Clean rooms and friendly staff.",
+    "review_id": "review_5",
+    "length": 80,
+    "sentiment": "POSITIVE",
+    "confidence": 0.7,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Disappointing stay. The room was dirty and the air conditioning didn't work properly.",
+    "review_id": "review_6",
+    "length": 85,
+    "sentiment": "NEGATIVE",
+    "confidence": 0.8,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Overpriced for what you get. The hotel is outdated and needs renovation.",
+    "review_id": "review_7",
+    "length": 72,
+    "sentiment": "NEGATIVE",
+    "confidence": 0.7,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Terrible experience. Noisy rooms, uncomfortable beds, and poor customer service.",
+    "review_id": "review_8",
+    "length": 80,
+    "sentiment": "NEGATIVE",
+    "confidence": 0.9,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "The hotel photos are misleading. Reality is much worse than advertised.",
+    "review_id": "review_9",
+    "length": 71,
+    "sentiment": "NEUTRAL",
+    "confidence": 0.5,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Had high expectations but was let down. The food was bland and overpriced.",
+    "review_id": "review_10",
+    "length": 74,
+    "sentiment": "NEGATIVE",
+    "confidence": 0.7,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Average hotel stay. Some good points but rooms could be cleaner.",
+    "review_id": "review_11",
+    "length": 64,
+    "sentiment": "NEUTRAL",
+    "confidence": 0.5,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Decent enough for a short stay. Nothing special but adequate.",
+    "review_id": "review_12",
+    "length": 61,
+    "sentiment": "NEUTRAL",
+    "confidence": 0.5,
+    "method": "keyword_matching"
+  },
+  {
+    "text": "Mixed feelings about this hotel. Good breakfast but rooms are small.",
+    "review_id": "review_13",
+    "length": 68,
+    "sentiment": "NEUTRAL",
+    "confidence": 0.5,
+    "method": "keyword_matching"
+  }
+]

@@ -1,0 +1,236 @@
+[
+  {
+    "text": "The Eiffel Tower is absolutely magnificent! The views from the top are breathtaking and the iron structure is an engineering marvel. A must-visit in Paris!",
+    "rating": 5,
+    "date": "2024-10-15",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_1",
+    "helpful_votes": 23,
+    "review_id": "paris_review_001"
+  },
+  {
+    "text": "Very crowded and expensive. The lines were extremely long and the elevator was packed. The view is nice but not worth the hassle and cost.",
+    "rating": 2,
+    "date": "2024-10-14",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_2",
+    "helpful_votes": 23,
+    "review_id": "paris_review_002"
+  },
+  {
+    "text": "Iconic landmark that lives up to the hype. Beautiful at night when it's lit up. I recommend going in the evening for the best experience.",
+    "rating": 4,
+    "date": "2024-10-13",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_3",
+    "helpful_votes": 24,
+    "review_id": "paris_review_003"
+  },
+  {
+    "text": "Overrated tourist trap. Too many people, overpriced tickets, and the security checks take forever. Paris has better attractions to visit.",
+    "rating": 2,
+    "date": "2024-10-12",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_4",
+    "helpful_votes": 2,
+    "review_id": "paris_review_004"
+  },
+  {
+    "text": "Amazing experience! Went during sunset and the views were spectacular. The tower is even more beautiful than in photos.",
+    "rating": 5,
+    "date": "2024-10-11",
+    "attraction": "Eiffel Tower",
+    "reviewer": "TravelLover_5",
+    "helpful_votes": 11,
+    "review_id": "paris_review_005"
+  },
+  {
+    "text": "The Louvre is incredible! So much art and history in one place. The Mona Lisa is smaller than expected but the museum itself is a masterpiece.",
+    "rating": 5,
+    "date": "2024-10-10",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_6",
+    "helpful_votes": 13,
+    "review_id": "paris_review_006"
+  },
+  {
+    "text": "Way too big and overwhelming. You need at least 2 days to see everything properly. The crowds around Mona Lisa are insane.",
+    "rating": 3,
+    "date": "2024-10-09",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_7",
+    "helpful_votes": 19,
+    "review_id": "paris_review_007"
+  },
+  {
+    "text": "World-class museum with amazing collections. The building itself is as beautiful as the art inside. Book tickets in advance!",
+    "rating": 5,
+    "date": "2024-10-08",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_8",
+    "helpful_votes": 21,
+    "review_id": "paris_review_008"
+  },
+  {
+    "text": "Disappointing visit. Too crowded, poor organization, and many exhibits were closed. The audio guide was not worth the extra cost.",
+    "rating": 2,
+    "date": "2024-10-07",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_9",
+    "helpful_votes": 7,
+    "review_id": "paris_review_009"
+  },
+  {
+    "text": "Absolutely stunning museum. The Egyptian collection is fantastic and the architecture is breathtaking. A cultural treasure.",
+    "rating": 4,
+    "date": "2024-10-06",
+    "attraction": "Louvre Museum",
+    "reviewer": "TravelLover_10",
+    "helpful_votes": 23,
+    "review_id": "paris_review_010"
+  },
+  {
+    "text": "Beautiful monument with great views of the Champs-Élysées. The climb to the top is worth it for the panoramic views of Paris.",
+    "rating": 4,
+    "date": "2024-10-05",
+    "attraction": "Arc de Triomphe",
+    "reviewer": "TravelLover_11",
+    "helpful_votes": 1,
+    "review_id": "paris_review_011"
+  },
+  {
+    "text": "Nice monument but nothing special. The area is very touristy and crowded. You can see it well enough from the street.",
+    "rating": 3,
+    "date": "2024-10-04",
+    "attraction": "Arc de Triomphe",
+    "reviewer": "TravelLover_12",
+    "helpful_votes": 21,
+    "review_id": "paris_review_012"
+  },
+  {
+    "text": "Impressive architecture and rich history. The view from the top gives you a great perspective of Paris' layout. Highly recommended!",
+    "rating": 5,
+    "date": "2024-10-03",
+    "attraction": "Arc de Triomphe",
+    "reviewer": "TravelLover_13",
+    "helpful_votes": 4,
+    "review_id": "paris_review_013"
+  },
+  {
+    "text": "Overpriced for what it is. Just a monument you can walk around for free. Don't waste money going to the top.",
+    "rating": 2,
+    "date": "2024-10-02",
+    "attraction": "Arc de Triomphe",
+    "reviewer": "TravelLover_14",
+    "helpful_votes": 0,
+    "review_id": "paris_review_014"
+  },
+  {
+    "text": "Even under restoration, Notre-Dame remains magnificent. The gothic architecture is stunning and the area around it is beautiful.",
+    "rating": 4,
+    "date": "2024-10-01",
+    "attraction": "Notre-Dame",
+    "reviewer": "TravelLover_15",
+    "helpful_votes": 18,
+    "review_id": "paris_review_015"
+  },
+  {
+    "text": "Sad to see it damaged but still impressive from the outside. Looking forward to seeing it fully restored in the future.",
+    "rating": 3,
+    "date": "2024-09-30",
+    "attraction": "Notre-Dame",
+    "reviewer": "TravelLover_16",
+    "helpful_votes": 5,
+    "review_id": "paris_review_016"
+  },
+  {
+    "text": "A masterpiece of gothic architecture. The façade is incredibly detailed. Can't wait for the restoration to be complete.",
+    "rating": 4,
+    "date": "2024-09-29",
+    "attraction": "Notre-Dame",
+    "reviewer": "TravelLover_17",
+    "helpful_votes": 3,
+    "review_id": "paris_review_017"
+  },
+  {
+    "text": "Beautiful basilica with amazing views over Paris. The climb up to Montmartre is worth it. Free to enter and very peaceful inside.",
+    "rating": 5,
+    "date": "2024-09-28",
+    "attraction": "Sacré-Cœur",
+    "reviewer": "TravelLover_18",
+    "helpful_votes": 7,
+    "review_id": "paris_review_018"
+  },
+  {
+    "text": "Nice church but the area is full of scammers and pickpockets. Be very careful with your belongings in Montmartre.",
+    "rating": 2,
+    "date": "2024-09-27",
+    "attraction": "Sacré-Cœur",
+    "reviewer": "TravelLover_19",
+    "helpful_votes": 2,
+    "review_id": "paris_review_019"
+  },
+  {
+    "text": "Stunning basilica and the views from the steps are incredible. Great place to watch the sunset over Paris.",
+    "rating": 4,
+    "date": "2024-09-26",
+    "attraction": "Sacré-Cœur",
+    "reviewer": "TravelLover_20",
+    "helpful_votes": 14,
+    "review_id": "paris_review_020"
+  },
+  {
+    "text": "Relaxing way to see Paris from a different perspective. The evening cruise with dinner was romantic and the views were beautiful.",
+    "rating": 4,
+    "date": "2024-09-25",
+    "attraction": "Seine River Cruise",
+    "reviewer": "TravelLover_21",
+    "helpful_votes": 17,
+    "review_id": "paris_review_021"
+  },
+  {
+    "text": "Boring and overpriced. You see the same buildings you can see from the street. The commentary was not interesting.",
+    "rating": 2,
+    "date": "2024-09-24",
+    "attraction": "Seine River Cruise",
+    "reviewer": "TravelLover_22",
+    "helpful_votes": 4,
+    "review_id": "paris_review_022"
+  },
+  {
+    "text": "Great way to see multiple landmarks in one trip. The boat was comfortable and the guide was knowledgeable about Paris history.",
+    "rating": 4,
+    "date": "2024-09-23",
+    "attraction": "Seine River Cruise",
+    "reviewer": "TravelLover_23",
+    "helpful_votes": 24,
+    "review_id": "paris_review_023"
+  },
+  {
+    "text": "Fantastic museum for Impressionist art! Van Gogh, Monet, and Renoir collections are outstanding. Much more manageable than the Louvre.",
+    "rating": 5,
+    "date": "2024-09-22",
+    "attraction": "Musée d'Orsay",
+    "reviewer": "TravelLover_24",
+    "helpful_votes": 20,
+    "review_id": "paris_review_024"
+  },
+  {
+    "text": "Beautiful building and great art collection. Less crowded than other major museums. The Van Gogh paintings are incredible.",
+    "rating": 4,
+    "date": "2024-09-21",
+    "attraction": "Musée d'Orsay",
+    "reviewer": "TravelLover_25",
+    "helpful_votes": 18,
+    "review_id": "paris_review_025"
+  },
+  {
+    "text": "Good museum but limited collection compared to other major museums. The building itself is more interesting than some exhibits.",
+    "rating": 3,
+    "date": "2024-09-20",
+    "attraction": "Musée d'Orsay",
+    "reviewer": "TravelLover_26",
+    "helpful_votes": 4,
+    "review_id": "paris_review_026"
+  }
+]

@@ -35,7 +35,7 @@ from download_and_prepare_dataset import download_and_prepare_dataset
 # ============================================================================
 
 # Dataset sampling parameters
-SAMPLES_PER_CLASS = 1750          # Number of samples per sentiment class (negative/positive)
+SAMPLES_PER_CLASS = 17500          # Number of samples per sentiment class (negative/positive)
 TOTAL_SAMPLES = SAMPLES_PER_CLASS * 2  # Total samples to process (3500)
 
 # Processing parameters  
@@ -64,7 +64,7 @@ plt.style.use('default')  # Use default style instead of seaborn which might not
 sns.set_palette("husl")
 
 # Download and prepare dataset
-path_db = "/Users/andreyvlasenko/tst/Request/filtered_reviews.db" #download_and_prepare_dataset()
+path_db = download_and_prepare_dataset()
 print('Dataset path:', path_db)
 
 # Set HuggingFace cache directory
