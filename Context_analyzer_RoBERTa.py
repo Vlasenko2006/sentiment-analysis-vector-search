@@ -31,6 +31,20 @@ import re
 import sqlite3
 from download_and_prepare_dataset import download_and_prepare_dataset
 
+# PDF report generation
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+    from datetime import datetime
+    PDF_AVAILABLE = True
+except ImportError:
+    print("⚠️ ReportLab not available. Install with: pip install reportlab")
+    PDF_AVAILABLE = False
+
 # ============================================================================
 # CONFIGURATION PARAMETERS
 # ============================================================================
@@ -343,6 +357,238 @@ def find_representative_comments(sentiment_data, n_representatives=None):
     
     return pd.DataFrame(representatives)
 
+def extract_source_info_from_db(db_path):
+    """Extract source website information from database"""
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Get unique file paths to determine source
+        cursor.execute("SELECT DISTINCT file_path FROM comment_blocks LIMIT 5")
+        file_paths = [row[0] for row in cursor.fetchall()]
+        
+        # Extract website/source info from file paths
+        sources = []
+        for path in file_paths:
+            filename = os.path.basename(path)
+            if 'senso-ji' in filename.lower() or 'asakusa' in filename.lower():
+                sources.append("TripAdvisor - Senso-ji Temple, Asakusa")
+            elif 'tripadvisor' in filename.lower():
+                sources.append("TripAdvisor")
+            else:
+                # Try to extract meaningful name from filename
+                clean_name = filename.replace('%20', ' ').replace('.html', '').replace('.htm', '')
+                sources.append(f"Web Source: {clean_name}")
+        
+        conn.close()
+        
+        if sources:
+            return sources[0]  # Return the first/main source
+        else:
+            return "Web Source: Unknown"
+            
+    except Exception as e:
+        return f"Database Source: {os.path.basename(db_path)}"
+
+def generate_pdf_report(results_df, representative_results, performance_summary, 
+                       folders, db_path, total_time):
+    """Generate comprehensive PDF report of the analysis"""
+    
+    if not PDF_AVAILABLE:
+        print("❌ Cannot generate PDF report. Install reportlab: pip install reportlab")
+        return None
+    
+    # Create PDF file path
+    pdf_path = os.path.join(folders['visualizations'], 'sentiment_analysis_report.pdf')
+    
+    # Create PDF document
+    doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    story = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        textColor=colors.Color(0, 0, 0.8)  # Dark blue
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        spaceAfter=12,
+        spaceBefore=20,
+        textColor=colors.Color(0.8, 0, 0)  # Dark red
+    )
+    
+    subheading_style = ParagraphStyle(
+        'CustomSubHeading',
+        parent=styles['Heading3'],
+        fontSize=12,
+        spaceAfter=8,
+        spaceBefore=15,
+        textColor=colors.Color(0, 0, 0.8)  # Blue
+    )
+    
+    # Title page
+    story.append(Paragraph("RoBERTa Sentiment Analysis Report", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Source information
+    source_info = extract_source_info_from_db(db_path)
+    story.append(Paragraph(f"<b>Data Source:</b> {source_info}", styles['Normal']))
+    story.append(Spacer(1, 10))
+    
+    # Analysis date and summary
+    story.append(Paragraph(f"<b>Analysis Date:</b> {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
+    story.append(Paragraph(f"<b>Total Comments Analyzed:</b> {len(results_df)}", styles['Normal']))
+    story.append(Paragraph(f"<b>Processing Time:</b> {total_time/60:.1f} minutes", styles['Normal']))
+    story.append(Paragraph(f"<b>Neural Network Model:</b> DistilBERT-based sentiment classifier", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Executive Summary
+    story.append(Paragraph("Executive Summary", heading_style))
+    
+    sentiment_dist = performance_summary.get('sentiment_distribution', {})
+    total_comments = sum(sentiment_dist.values())
+    
+    summary_text = f"""
+    This report presents a comprehensive sentiment analysis of {total_comments} user comments extracted 
+    from {source_info} using advanced neural network classification. The analysis employed DistilBERT 
+    for sentiment classification and TF-IDF vectorization with K-means clustering for representative 
+    comment selection.
+    
+    <b>Key Findings:</b><br/>
+    • Positive Comments: {sentiment_dist.get('POSITIVE', 0)} ({sentiment_dist.get('POSITIVE', 0)/total_comments*100:.1f}%)<br/>
+    • Negative Comments: {sentiment_dist.get('NEGATIVE', 0)} ({sentiment_dist.get('NEGATIVE', 0)/total_comments*100:.1f}%)<br/>
+    • Neutral Comments: {sentiment_dist.get('NEUTRAL', 0)} ({sentiment_dist.get('NEUTRAL', 0)/total_comments*100:.1f}%)<br/>
+    
+    The analysis utilized vector search and clustering algorithms to identify the most representative 
+    comments from each sentiment category, providing insights into common themes and user experiences.
+    """
+    
+    story.append(Paragraph(summary_text, styles['Normal']))
+    story.append(PageBreak())
+    
+    # Methodology
+    story.append(Paragraph("Methodology", heading_style))
+    methodology_text = """
+    <b>1. Data Extraction:</b> Comments were pre-filtered using neural network-based quality scoring 
+    to identify genuine user-generated content versus website boilerplate.<br/><br/>
+    
+    <b>2. Sentiment Classification:</b> DistilBERT model processed each comment to classify sentiment 
+    as Positive, Negative, or Neutral with confidence scores.<br/><br/>
+    
+    <b>3. Vector Search & Clustering:</b> TF-IDF vectorization transformed text into numerical 
+    representations, followed by K-means clustering to group similar comments.<br/><br/>
+    
+    <b>4. Representative Selection:</b> For each cluster, the comment closest to the centroid 
+    was selected as the most representative example of that theme.
+    """
+    
+    story.append(Paragraph(methodology_text, styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Add visualizations if they exist
+    viz_files = ['sentiment_analysis_overview.png', 'sentiment_wordclouds.png', 'word_frequency_analysis.png']
+    
+    for viz_file in viz_files:
+        viz_path = os.path.join(folders['visualizations'], viz_file)
+        if os.path.exists(viz_path):
+            story.append(Paragraph(f"Analysis Visualization: {viz_file.replace('_', ' ').title()}", subheading_style))
+            try:
+                # Add image with appropriate sizing
+                img = Image(viz_path, width=7*inch, height=4*inch)
+                story.append(img)
+                story.append(Spacer(1, 15))
+            except Exception as e:
+                story.append(Paragraph(f"[Visualization not available: {str(e)}]", styles['Italic']))
+    
+    story.append(PageBreak())
+    
+    # Representative Comments Section
+    story.append(Paragraph("Most Representative Comments", heading_style))
+    
+    for sentiment in ['POSITIVE', 'NEGATIVE', 'NEUTRAL']:
+        if sentiment in representative_results and len(representative_results[sentiment]) > 0:
+            story.append(Paragraph(f"{sentiment.title()} Comments", subheading_style))
+            
+            representatives = representative_results[sentiment].sort_values('confidence', ascending=False)
+            
+            # Create table for top 5 representative comments
+            table_data = [['Rank', 'Confidence', 'Cluster Info', 'Comment Text']]
+            
+            for i, (_, row) in enumerate(representatives.head(5).iterrows(), 1):
+                comment_text = str(row['text'])
+                if len(comment_text) > 150:
+                    comment_text = comment_text[:150] + "..."
+                
+                cluster_info = f"Cluster {row.get('cluster_id', 'N/A')} (Size: {row.get('cluster_size', 'N/A')})"
+                
+                table_data.append([
+                    str(i),
+                    f"{row['confidence']:.3f}",
+                    cluster_info,
+                    comment_text
+                ])
+            
+            # Create and style table
+            table = Table(table_data, colWidths=[0.5*inch, 1*inch, 1.5*inch, 4*inch])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#808080')),  # Grey
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#F5F5DC')),   # WhiteSmoke
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5DC')), # Beige
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#000000')),    # Black
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            
+            story.append(table)
+            story.append(Spacer(1, 20))
+    
+    # Technical Details
+    story.append(PageBreak())
+    story.append(Paragraph("Technical Details", heading_style))
+    
+    tech_details = f"""
+    <b>Processing Configuration:</b><br/>
+    • TF-IDF Features: {TFIDF_MAX_FEATURES}<br/>
+    • Minimum Document Frequency: {TFIDF_MIN_DF}<br/>
+    • Maximum Document Frequency: {TFIDF_MAX_DF}<br/>
+    • Clusters per Sentiment: {N_REPRESENTATIVES}<br/>
+    • Confidence Threshold: {CONFIDENCE_THRESHOLD}<br/><br/>
+    
+    <b>Performance Metrics:</b><br/>
+    • Average Original Quality Score: {performance_summary.get('score_distribution', {}).get('avg_original_score', 'N/A'):.3f}<br/>
+    • Average Sentiment Confidence: {performance_summary.get('score_distribution', {}).get('avg_sentiment_confidence', 'N/A'):.3f}<br/>
+    • High-Quality Candidates: {performance_summary.get('score_distribution', {}).get('candidates_count', 'N/A')}<br/>
+    • Processing Rate: {len(results_df)/(total_time/60):.1f} comments/minute<br/><br/>
+    
+    <b>Database Information:</b><br/>
+    • Source Database: {os.path.basename(db_path)}<br/>
+    • Total Records Processed: {len(results_df)}<br/>
+    • Analysis Timestamp: {datetime.now().isoformat()}
+    """
+    
+    story.append(Paragraph(tech_details, styles['Normal']))
+    
+    # Build PDF
+    try:
+        doc.build(story)
+        print(f"📄 PDF report generated: {pdf_path}")
+        return pdf_path
+    except Exception as e:
+        print(f"❌ Error generating PDF report: {e}")
+        return None
+
 # Find representative comments for each sentiment
 print("\n🔍 Finding most representative comments...")
 
@@ -616,3 +862,32 @@ print(f"""
    • Neutral classifications: {sentiment_counts['NEUTRAL']} ({sentiment_counts['NEUTRAL']/len(results_df)*100:.1f}%)
    • High-quality candidates: {performance_summary['score_distribution']['candidates_count']}
 """)
+
+# Generate comprehensive PDF report
+print("\n" + "=" * 80)
+print("GENERATING PDF REPORT")
+print("=" * 80)
+
+print("\n📄 Creating comprehensive PDF report...")
+pdf_path = generate_pdf_report(
+    results_df=results_df,
+    representative_results=representative_results,
+    performance_summary=performance_summary,
+    folders=folders,
+    db_path=path_db,
+    total_time=total_time
+)
+
+if pdf_path:
+    print(f"✅ PDF report successfully generated: {pdf_path}")
+    print("📋 Report includes:")
+    print("   • Executive summary with source information")
+    print("   • Methodology and technical details")
+    print("   • Sentiment analysis visualizations")
+    print("   • Most representative comments by sentiment")
+    print("   • Performance metrics and processing statistics")
+else:
+    print("❌ PDF report generation failed")
+
+print(f"\n📁 All outputs saved to: {OUTPUT_BASE_DIR}")
+print("🎉 Complete analysis package ready for review!")
