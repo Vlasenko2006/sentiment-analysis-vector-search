@@ -1,0 +1,141 @@
+# Security - API Keys and Secrets
+config_key.yaml
+config_keys.yaml
+*.key
+*.pem
+*.env
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv
+
+# Docker
+.dockerignore
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Application specific
+my_volume/
+extracted_text/
+cache/
+*.db
+*.sqlite
+*.sqlite3
+comment_blocks.db
+
+# Backup and obsolete folders
+obsolete/
+bkup*/
+b*/
+c*/
+
+# Output folders
+review_analysis_output/
+senso_ji_analysis.json
+tripadvisor_local_analysis.py
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+temp/
+
+# Large model files
+*.bin
+*.h5
+*.onnx
+*.pt
+*.pth
+models/
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+
+# Build outputs
+*.o
+*.a
+*.exe
+bin/
+obj/
+
+# Metrics
+mlruns
+.mlruns
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Mac specific
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# MLflow virtual environment
+mlflow_env/
+
+# MLflow experiment data
+mlruns/
+.mlruns/
+
+# Interview preparation (personal notes)
+INTERVIEW_PREP.md
+
+# Obsolete files moved during cleanup
+obsolete/
+
+# Temporary scripts
+*.sh
+!start.sh
+!REBUILD_FRONTEND.sh
+

@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  python-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: sentiment-python-v2
+    ports:
+      - "8001:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - TRANSFORMERS_CACHE=/app/cache
+      - HF_HOME=/app/cache
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persistent volumes for output
+      - ./my_volume:/app/my_volume
+      - ./cache:/app/cache
+      - ./extracted_text:/app/extracted_text
+      # Development: Mount source code (DISABLED - overwrites fixed files in container)
+      # - ./*.py:/app/
+      # - ./config.yaml:/app/config.yaml
+    networks:
+      - sentiment-network-v2
+    restart: unless-stopped
+    # Healthcheck temporarily disabled - will rely on Dockerfile healthcheck
+    # healthcheck:
+    #   test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
+
+  dotnet-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dotnet
+    container_name: sentiment-dotnet-api-v2
+    ports:
+      - "5001:8080"  # Map to port 8080 inside container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - PythonServiceUrl=http://python-service:8000
+    depends_on:
+      - python-service
+      # Temporarily removed condition - health check takes 2+ minutes
+      # python-service:
+      #   condition: service_healthy
+    networks:
+      - sentiment-network-v2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: sentiment-frontend-v2
+    ports:
+      - "3001:80"  # Frontend accessible at http://localhost:3001
+    depends_on:
+      - python-service  # Changed from dotnet-api to python-service
+    networks:
+      - sentiment-network-v2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  sentiment-network-v2:
+    driver: bridge
+
+# Production deployment notes:
+# 1. Remove volume mounts for source code
+# 2. Use environment variables from .env file
+# 3. Add nginx reverse proxy service
+# 4. Add SSL/TLS certificates

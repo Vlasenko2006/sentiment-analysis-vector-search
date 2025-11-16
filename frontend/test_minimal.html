@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Form</title>
+</head>
+<body>
+    <h1>Minimal Test</h1>
+    <form id="testForm">
+        <input type="email" id="email" value="test@test.com" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        console.log('Script loaded!');
+        
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Form submitted!');
+            
+            const email = document.getElementById('email').value;
+            document.getElementById('result').textContent = 'Submitting to API...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/sentiment/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        searchMethod: 'demo'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').textContent = 'Success! Job ID: ' + data.job_id;
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

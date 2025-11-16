@@ -1,0 +1,481 @@
+// Configuration
+const API_BASE_URL = 'http://localhost:5000/api/sentiment';
+const POLL_INTERVAL = 3000; // Poll every 3 seconds
+
+// Global state
+let currentJobId = null;
+let pollInterval = null;
+
+// DOM Elements
+const analysisForm = document.getElementById('analysisForm');
+const submitBtn = document.getElementById('submitBtn');
+const progressSection = document.getElementById('progressSection');
+const resultsSection = document.getElementById('resultsSection');
+const errorSection = document.getElementById('errorSection');
+const taskSection = document.getElementById('taskSection');
+const customTaskTextarea = document.getElementById('customTask');
+
+// Radio buttons and conditional inputs
+const radioKeywords = document.getElementById('option-keywords');
+const radioUrls = document.getElementById('option-urls');
+const radioDemo = document.getElementById('option-demo');
+const inputKeywords = document.getElementById('input-keywords');
+const inputUrls = document.getElementById('input-urls');
+
+// Progress elements
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+
+// Result buttons
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+const viewDataBtn = document.getElementById('viewDataBtn');
+const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+const retryBtn = document.getElementById('retryBtn');
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    console.log('Frontend initialized');
+});
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Form submission
+    analysisForm.addEventListener('submit', handleFormSubmit);
+
+    // Radio button changes
+    radioKeywords.addEventListener('change', handleSearchMethodChange);
+    radioUrls.addEventListener('change', handleSearchMethodChange);
+    radioDemo.addEventListener('change', handleSearchMethodChange);
+
+    // Result buttons
+    downloadPdfBtn.addEventListener('click', downloadPdf);
+    viewDataBtn.addEventListener('click', viewJsonData);
+    newAnalysisBtn.addEventListener('click', resetForm);
+    retryBtn.addEventListener('click', resetForm);
+}
+
+// Handle search method radio button changes
+function handleSearchMethodChange() {
+    // Hide all conditional inputs
+    inputKeywords.style.display = 'none';
+    inputUrls.style.display = 'none';
+
+    // Clear required attributes
+    document.getElementById('keywords').removeAttribute('required');
+    document.getElementById('urls').removeAttribute('required');
+
+    // Show relevant input and update task section
+    if (radioKeywords.checked) {
+        inputKeywords.style.display = 'block';
+        document.getElementById('keywords').setAttribute('required', 'required');
+        customTaskTextarea.disabled = false;
+    } else if (radioUrls.checked) {
+        inputUrls.style.display = 'block';
+        document.getElementById('urls').setAttribute('required', 'required');
+        customTaskTextarea.disabled = false;
+    } else if (radioDemo.checked) {
+        // Demo mode - disable custom task
+        customTaskTextarea.disabled = true;
+        customTaskTextarea.value = '';
+    }
+}
+
+// Handle form submission
+async function handleFormSubmit(e) {
+    e.preventDefault();
+
+    // Get form values
+    const email = document.getElementById('email').value.trim();
+    const searchMethod = document.querySelector('input[name="searchMethod"]:checked').value;
+    const customTask = document.getElementById('customTask').value.trim();
+
+    // Validate email
+    if (!validateEmail(email)) {
+        showError('Please enter a valid email address.');
+        return;
+    }
+
+    // Prepare request data
+    let requestData = {
+        email: email,
+        searchMethod: searchMethod
+    };
+
+    // Add search input based on method
+    if (searchMethod === 'keywords') {
+        const keywords = document.getElementById('keywords').value.trim();
+        if (!keywords) {
+            showError('Please enter search keywords.');
+            return;
+        }
+        requestData.searchInput = keywords;
+    } else if (searchMethod === 'urls') {
+        const urls = document.getElementById('urls').value.trim();
+        if (!urls) {
+            showError('Please enter at least one URL.');
+            return;
+        }
+        requestData.searchInput = urls;
+    } else {
+        // Demo mode
+        requestData.searchInput = null;
+    }
+
+    // Add custom task if provided
+    if (customTask && searchMethod !== 'demo') {
+        requestData.customPrompt = customTask;
+    }
+
+    console.log('Submitting analysis request:', requestData);
+
+    // Start analysis
+    await startAnalysis(requestData);
+}
+
+// Start analysis
+async function startAnalysis(requestData) {
+    try {
+        // Hide form and error sections
+        analysisForm.style.display = 'none';
+        errorSection.style.display = 'none';
+        resultsSection.style.display = 'none';
+
+        // Show progress section
+        progressSection.style.display = 'block';
+        resetProgress();
+
+        // Disable submit button
+        submitBtn.disabled = true;
+
+        // Call API
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                url: requestData.searchInput || 'demo', // Will be processed by backend
+                htmlContent: null,
+                email: requestData.email,
+                customPrompt: requestData.customPrompt || null,
+                searchMethod: requestData.searchMethod
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Analysis started:', data);
+
+        currentJobId = data.jobId;
+
+        // Start polling for status
+        startPolling();
+
+    } catch (error) {
+        console.error('Error starting analysis:', error);
+        showError(`Failed to start analysis: ${error.message}`);
+        analysisForm.style.display = 'block';
+        progressSection.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+}
+
+// Start polling for job status
+function startPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+    }
+
+    pollInterval = setInterval(checkJobStatus, POLL_INTERVAL);
+    checkJobStatus(); // Check immediately
+}
+
+// Check job status
+async function checkJobStatus() {
+    if (!currentJobId) {
+        stopPolling();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/status/${currentJobId}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Job status:', data);
+
+        // Update progress
+        updateProgress(data.progress, data.status);
+
+        // Check if completed
+        if (data.status === 'completed') {
+            stopPolling();
+            showResults(data);
+        } else if (data.status === 'failed') {
+            stopPolling();
+            showError(data.message || 'Analysis failed. Please try again.');
+        }
+
+    } catch (error) {
+        console.error('Error checking job status:', error);
+        stopPolling();
+        showError(`Failed to check job status: ${error.message}`);
+    }
+}
+
+// Stop polling
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+    }
+}
+
+// Update progress bar and steps
+function updateProgress(progress, status) {
+    // Update progress bar
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+
+    // Update steps based on progress
+    const steps = [
+        { id: 'step-init', threshold: 10 },
+        { id: 'step-download', threshold: 20 },
+        { id: 'step-extract', threshold: 30 },
+        { id: 'step-analyze', threshold: 40 },
+        { id: 'step-summarize', threshold: 60 },
+        { id: 'step-recommend', threshold: 75 },
+        { id: 'step-pdf', threshold: 90 },
+        { id: 'step-complete', threshold: 100 }
+    ];
+
+    steps.forEach(step => {
+        const stepElement = document.getElementById(step.id);
+        if (progress >= step.threshold) {
+            stepElement.classList.add('completed');
+            stepElement.classList.remove('active');
+        } else if (progress >= step.threshold - 10) {
+            stepElement.classList.add('active');
+            stepElement.classList.remove('completed');
+        } else {
+            stepElement.classList.remove('active', 'completed');
+        }
+    });
+}
+
+// Reset progress
+function resetProgress() {
+    progressFill.style.width = '0%';
+    progressText.textContent = '0%';
+
+    // Reset all steps
+    const steps = document.querySelectorAll('.step');
+    steps.forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+}
+
+// Show results
+function showResults(jobData) {
+    progressSection.style.display = 'none';
+    resultsSection.style.display = 'block';
+
+    // Store job ID for download
+    downloadPdfBtn.dataset.jobId = currentJobId;
+    viewDataBtn.dataset.jobId = currentJobId;
+
+    // Fetch and display quick stats
+    fetchQuickStats(currentJobId);
+}
+
+// Fetch quick statistics
+async function fetchQuickStats(jobId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/results/${jobId}/data`);
+        
+        if (!response.ok) {
+            console.warn('Could not fetch statistics');
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Analysis data:', data);
+
+        // Display statistics
+        displayQuickStats(data);
+
+    } catch (error) {
+        console.error('Error fetching statistics:', error);
+    }
+}
+
+// Display quick statistics
+function displayQuickStats(data) {
+    const statsContainer = document.getElementById('quickStats');
+    
+    // Extract statistics
+    const stats = data.statistics || {};
+    
+    const html = `
+        <h4>📊 Quick Statistics</h4>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-value">${stats.total_reviews || 0}</span>
+                <span class="stat-label">Total Reviews</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: #28a745;">${stats.positive || 0}</span>
+                <span class="stat-label">Positive (${Math.round((stats.positive || 0) / (stats.total_reviews || 1) * 100)}%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: #dc3545;">${stats.negative || 0}</span>
+                <span class="stat-label">Negative (${Math.round((stats.negative || 0) / (stats.total_reviews || 1) * 100)}%)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: #6c757d;">${stats.neutral || 0}</span>
+                <span class="stat-label">Neutral (${Math.round((stats.neutral || 0) / (stats.total_reviews || 1) * 100)}%)</span>
+            </div>
+        </div>
+    `;
+    
+    statsContainer.innerHTML = html;
+}
+
+// Download PDF
+async function downloadPdf() {
+    const jobId = downloadPdfBtn.dataset.jobId;
+    if (!jobId) return;
+
+    try {
+        downloadPdfBtn.disabled = true;
+        downloadPdfBtn.innerHTML = '<span class="button-icon">⏳</span> Downloading...';
+
+        const response = await fetch(`${API_BASE_URL}/results/${jobId}/pdf`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to download PDF');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sentiment_report_${jobId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.innerHTML = '<span class="button-icon">📄</span> Download PDF Report';
+
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+        alert('Failed to download PDF. Please try again.');
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.innerHTML = '<span class="button-icon">📄</span> Download PDF Report';
+    }
+}
+
+// View JSON data
+async function viewJsonData() {
+    const jobId = viewDataBtn.dataset.jobId;
+    if (!jobId) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/results/${jobId}/data`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch data');
+        }
+
+        const data = await response.json();
+        
+        // Open in new window with formatted JSON
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+            <html>
+            <head>
+                <title>Analysis Data - Job ${jobId}</title>
+                <style>
+                    body { 
+                        font-family: 'Courier New', monospace; 
+                        padding: 20px; 
+                        background: #1e1e1e; 
+                        color: #d4d4d4;
+                    }
+                    pre { 
+                        white-space: pre-wrap; 
+                        word-wrap: break-word; 
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>Analysis Results - Job ${jobId}</h2>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            </body>
+            </html>
+        `);
+
+    } catch (error) {
+        console.error('Error viewing data:', error);
+        alert('Failed to load data. Please try again.');
+    }
+}
+
+// Reset form for new analysis
+function resetForm() {
+    // Reset form
+    analysisForm.reset();
+    analysisForm.style.display = 'block';
+    
+    // Hide other sections
+    progressSection.style.display = 'none';
+    resultsSection.style.display = 'none';
+    errorSection.style.display = 'none';
+    
+    // Enable submit button
+    submitBtn.disabled = false;
+    
+    // Clear job ID
+    currentJobId = null;
+    
+    // Stop polling
+    stopPolling();
+    
+    // Reset search method to demo
+    radioDemo.checked = true;
+    handleSearchMethodChange();
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Show error
+function showError(message) {
+    progressSection.style.display = 'none';
+    resultsSection.style.display = 'none';
+    errorSection.style.display = 'block';
+    
+    document.getElementById('errorText').textContent = message;
+    
+    submitBtn.disabled = false;
+    stopPolling();
+}
+
+// Validate email
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Log frontend version
+console.log('🎯 Sentiment Analysis Frontend v1.0 - Ready!');
+console.log('API Base URL:', API_BASE_URL);

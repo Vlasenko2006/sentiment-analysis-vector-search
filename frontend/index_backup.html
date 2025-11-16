@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chatbot.css">
+</head>
+<body>
+    <!-- Header with gradient background (matching PDF) -->
+    <header class="gradient-header">
+        <div class="header-content">
+            <h1 class="header-title" id="companyName">Loading...</h1>
+            <p class="header-subtitle">Sentiment Analysis Platform</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Welcome Message -->
+        <div class="welcome-section">
+            <h2>Welcome to AI-Powered Review Analysis! 🎯</h2>
+            <p>Analyze customer reviews with advanced sentiment analysis powered by DistilBERT and Groq AI. 
+               Get comprehensive insights, trends, and actionable recommendations delivered straight to your inbox.</p>
+        </div>
+
+        <!-- Analysis Form -->
+        <form id="analysisForm">
+            
+            <!-- Section 1: Email Address -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">📧</span>
+                    <h3>Email Address</h3>
+                    <span class="required-badge">Required</span>
+                </div>
+                <div class="input-group">
+                    <label for="email">Where should we send the PDF report?</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="max.mustermann@mail.de" 
+                        required
+                        class="form-input"
+                    >
+                    <small class="input-hint">We'll send the comprehensive analysis report to this address</small>
+                </div>
+            </div>
+
+            <!-- Section 2: Search Method -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">🔍</span>
+                    <h3>Search Method</h3>
+                    <span class="required-badge">Required</span>
+                </div>
+                <div class="radio-group">
+                    <p class="radio-label">How should we find reviews to analyze?</p>
+                    
+                    <div class="radio-option">
+                        <input type="radio" id="option-keywords" name="searchMethod" value="keywords" required>
+                        <label for="option-keywords">
+                            <strong>Search Google with keywords</strong>
+                            <span class="option-description">Enter search terms to find relevant review pages</span>
+                        </label>
+                    </div>
+                    <div class="input-conditional" id="input-keywords" style="display: none;">
+                        <input 
+                            type="text" 
+                            id="keywords" 
+                            name="keywords" 
+                            placeholder='e.g., "Tokyo restaurant reviews" or "Berlin hotel feedback"'
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="radio-option">
+                        <input type="radio" id="option-urls" name="searchMethod" value="urls" required>
+                        <label for="option-urls">
+                            <strong>Analyze specific URLs</strong>
+                            <span class="option-description">Paste direct links to TripAdvisor, Yelp, or Google reviews</span>
+                        </label>
+                    </div>
+                    <div class="input-conditional" id="input-urls" style="display: none;">
+                        <textarea 
+                            id="urls" 
+                            name="urls" 
+                            rows="4"
+                            placeholder="Paste URLs (one per line):&#10;https://www.tripadvisor.com/...&#10;https://www.yelp.com/..."
+                            class="form-textarea"
+                        ></textarea>
+                    </div>
+
+                    <div class="radio-option">
+                        <input type="radio" id="option-demo" name="searchMethod" value="demo" required checked>
+                        <label for="option-demo">
+                            <strong>Use demo mode</strong>
+                            <span class="option-description">Analyze pre-loaded Senso-ji Temple reviews (Tokyo)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Custom Task/Prompt -->
+            <div class="form-section" id="taskSection">
+                <div class="section-header">
+                    <span class="section-icon">💭</span>
+                    <h3>Custom Analysis Task</h3>
+                    <span class="optional-badge">Optional</span>
+                </div>
+                <div class="input-group">
+                    <label for="customTask">What should the AI focus on?</label>
+                    <textarea 
+                        id="customTask" 
+                        name="customTask" 
+                        rows="4"
+                        placeholder="Leave empty to use default prompt, or enter your custom task:&#10;&#10;Examples:&#10;- Focus on food quality and pricing issues&#10;- Analyze service response times and staff behavior&#10;- Compare cleanliness ratings across different periods"
+                        class="form-textarea"
+                        disabled
+                    ></textarea>
+                    <small class="input-hint">
+                        <strong>Default prompt:</strong> "Provide 3 actionable recommendations for improving customer satisfaction 
+                        focusing on food quality, service, ambiance, or value for money."
+                    </small>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button type="submit" id="submitBtn" class="submit-button">
+                    <span class="button-icon">⚡</span>
+                    Start Analysis
+                </button>
+            </div>
+        </form>
+
+        <!-- Progress Section (hidden initially) -->
+        <div id="progressSection" class="progress-section" style="display: none;">
+            <h3>Analysis in Progress...</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;">
+                        <span class="progress-text" id="progressText">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="steps-container" id="stepsContainer">
+                <div class="step" id="step-init">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Initializing analysis...</span>
+                </div>
+                <div class="step" id="step-download">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Downloading page content...</span>
+                </div>
+                <div class="step" id="step-extract">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Extracting reviews...</span>
+                </div>
+                <div class="step" id="step-analyze">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Analyzing sentiment with DistilBERT...</span>
+                </div>
+                <div class="step" id="step-summarize">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Generating AI summaries...</span>
+                </div>
+                <div class="step" id="step-recommend">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Creating recommendations...</span>
+                </div>
+                <div class="step" id="step-pdf">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Building PDF report...</span>
+                </div>
+                <div class="step" id="step-complete">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Finalizing...</span>
+                </div>
+            </div>
+
+            <p class="progress-info">This may take 2-5 minutes depending on the number of reviews...</p>
+        </div>
+
+        <!-- Results Section (hidden initially) -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="success-message">
+                <h2>✅ Analysis Complete!</h2>
+                <p>Your comprehensive sentiment analysis report is ready.</p>
+            </div>
+
+            <div class="results-actions">
+                <button id="downloadPdfBtn" class="action-button primary">
+                    <span class="button-icon">📄</span>
+                    Download PDF Report
+                </button>
+                <button id="viewDataBtn" class="action-button secondary">
+                    <span class="button-icon">📊</span>
+                    View JSON Data
+                </button>
+                <button id="newAnalysisBtn" class="action-button tertiary">
+                    <span class="button-icon">🔄</span>
+                    New Analysis
+                </button>
+            </div>
+
+            <!-- Quick Statistics -->
+            <div id="quickStats" class="quick-stats"></div>
+        </div>
+
+        <!-- Error Section (hidden initially) -->
+        <div id="errorSection" class="error-section" style="display: none;">
+            <div class="error-message">
+                <h2>❌ Analysis Failed</h2>
+                <p id="errorText">An error occurred during analysis. Please try again.</p>
+            </div>
+            <button id="retryBtn" class="action-button primary">
+                <span class="button-icon">🔄</span>
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Powered by DistilBERT • Groq AI • FastAPI • ASP.NET Core</p>
+        <p class="footer-note">Built with ❤️ for intelligent review analysis</p>
+    </footer>
+
+    <script src="debug-logger.js"></script>
+    <script src="chatbot.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Load company name from API on page load
+        (async function loadCompanyName() {
+            try {
+                const response = await fetch('http://localhost:5000/api/sentiment/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl) {
+                        nameEl.textContent = config.company_name || 'Awesome Company';
+                    }
+                } else {
+                    console.warn('Config API returned error:', response.status);
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl) nameEl.textContent = 'Awesome Company';
+                }
+            } catch (error) {
+                console.warn('Failed to load company name:', error);
+                const nameEl = document.getElementById('companyName');
+                if (nameEl) nameEl.textContent = 'Awesome Company';
+            }
+        })();
+    </script>
+<!-- Chatbot Widget (appears after analysis complete) -->
+<div id="chatbotWidget" class="chatbot-widget" style="display: none;">
+    <div class="chatbot-header">
+        <div class="chatbot-title">
+            <span class="chatbot-icon">💬</span>
+            <h3>Ask about your results</h3>
+        </div>
+        <button id="closeChatBtn" class="close-chat-btn">×</button>
+    </div>
+    
+    <div class="chatbot-messages" id="chatMessages">
+        <div class="chatbot-welcome">
+            <p><strong>Hi! I'm your AI analysis assistant.</strong></p>
+            <p>Ask me anything about your sentiment analysis results:</p>
+            <div class="suggested-questions" id="suggestedQuestions">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="chatbot-input-area">
+        <textarea 
+            id="chatInput" 
+            class="chat-input" 
+            placeholder="Ask a question about your results..."
+            rows="2"
+        ></textarea>
+        <button id="sendChatBtn" class="send-chat-btn">
+            <span>Send</span>
+        </button>
+    </div>
+</div>
+
+<!-- Chatbot Toggle Button (floating) -->
+<button id="toggleChatBtn" class="toggle-chat-btn" style="display: none;">
+    <span class="chat-bubble-icon">💬</span>
+    <span class="chat-label">Ask AI</span>
+</button>
+</button>
+</html>

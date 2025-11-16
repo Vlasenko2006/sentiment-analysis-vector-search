@@ -1,0 +1,197 @@
+// Chatbot functionality for Results interaction
+// Note: API_BASE_URL and currentJobId are defined in app.js
+// This module extends the main app with chatbot functionality
+
+let chatbotJobId = null;
+
+// Initialize chatbot after analysis completes
+function initializeChatbot(jobId) {
+    chatbotJobId = jobId;
+    
+    // Show the toggle button
+    document.getElementById('toggleChatBtn').style.display = 'flex';
+    
+    // Load suggested questions
+    loadSuggestedQuestions(jobId);
+    
+    // Setup event listeners
+    setupChatbotListeners();
+}
+
+// Setup all chatbot event listeners
+function setupChatbotListeners() {
+    const toggleBtn = document.getElementById('toggleChatBtn');
+    const closeBtn = document.getElementById('closeChatBtn');
+    const sendBtn = document.getElementById('sendChatBtn');
+    const chatInput = document.getElementById('chatInput');
+    
+    // Toggle chatbot visibility
+    toggleBtn.addEventListener('click', () => {
+        const widget = document.getElementById('chatbotWidget');
+        const isVisible = widget.style.display === 'flex';
+        widget.style.display = isVisible ? 'none' : 'flex';
+        
+        if (!isVisible) {
+            chatInput.focus();
+        }
+    });
+    
+    // Close chatbot
+    closeBtn.addEventListener('click', () => {
+        document.getElementById('chatbotWidget').style.display = 'none';
+    });
+    
+    // Send message on button click
+    sendBtn.addEventListener('click', () => sendMessage());
+    
+    // Send message on Enter (but allow Shift+Enter for new line)
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+}
+
+// Load suggested questions from API
+async function loadSuggestedQuestions(jobId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/results/${jobId}/chat/suggestions`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            displaySuggestedQuestions(data.suggestions);
+        }
+    } catch (error) {
+        console.error('Error loading suggestions:', error);
+    }
+}
+
+// Display suggested questions as chips
+function displaySuggestedQuestions(suggestions) {
+    const container = document.getElementById('suggestedQuestions');
+    container.innerHTML = '';
+    
+    suggestions.forEach(question => {
+        const chip = document.createElement('div');
+        chip.className = 'suggestion-chip';
+        chip.textContent = question;
+        chip.addEventListener('click', () => {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        });
+        container.appendChild(chip);
+    });
+}
+
+// Send message to chatbot
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const question = chatInput.value.trim();
+    
+    if (!question) return;
+    
+    // Clear input and disable while processing
+    chatInput.value = '';
+    chatInput.disabled = true;
+    document.getElementById('sendChatBtn').disabled = true;
+    
+    // Add user message to chat
+    addMessageToChat(question, 'user');
+    
+    // Show typing indicator
+    const typingIndicator = addTypingIndicator();
+    
+    try {
+        // Send to API
+        const response = await fetch(`${API_BASE_URL}/results/${currentJobId}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question: question,
+                include_history: true
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Remove typing indicator
+            typingIndicator.remove();
+            
+            // Add assistant response
+            addMessageToChat(data.answer, 'assistant');
+            
+            // Update suggested questions if provided
+            if (data.suggested_questions) {
+                displaySuggestedQuestions(data.suggested_questions);
+            }
+        } else {
+            const error = await response.json();
+            typingIndicator.remove();
+            addMessageToChat(`Sorry, I encountered an error: ${error.detail}`, 'assistant');
+        }
+    } catch (error) {
+        console.error('Chat error:', error);
+        typingIndicator.remove();
+        addMessageToChat('Sorry, I could not process your question. Please try again.', 'assistant');
+    } finally {
+        // Re-enable input
+        chatInput.disabled = false;
+        chatInput.focus();
+        document.getElementById('sendChatBtn').disabled = false;
+    }
+}
+
+// Add message to chat UI
+function addMessageToChat(text, sender) {
+    const messagesContainer = document.getElementById('chatMessages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message message-${sender}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = text;
+    
+    const timestamp = document.createElement('span');
+    timestamp.className = 'message-timestamp';
+    timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.appendChild(bubble);
+    messageDiv.appendChild(timestamp);
+    messagesContainer.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Add typing indicator
+function addTypingIndicator() {
+    const messagesContainer = document.getElementById('chatMessages');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message message-assistant';
+    messageDiv.id = 'typing-indicator';
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+    `;
+    
+    messageDiv.appendChild(typingDiv);
+    messagesContainer.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageDiv;
+}
+
+// Export for use in main app.js
+window.initializeChatbot = initializeChatbot;

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red6-ES | KI-gesteuerte Sentiment-Analyse</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header with Red6-ES branding -->
+    <header class="gradient-header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="red6-logo.jpg" alt="Red6-ES Logo" class="company-logo" onerror="this.style.display='none'">
+            </div>
+            <h1 class="header-title" id="companyName">Red6-ES</h1>
+            <p class="header-subtitle">KI-gesteuerte Sentiment-Analyse für Risikomodellierung</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Welcome Message -->
+        <div class="welcome-section">
+            <h2>Willkommen bei der Red6-ES Sentiment-Analyse Plattform! 🎯</h2>
+            <p>Analysieren Sie Kundenbewertungen mit fortschrittlicher Sentiment-Analyse basierend auf DistilBERT und Groq AI. 
+               Erhalten Sie umfassende Einblicke, Trends und umsetzbare Empfehlungen direkt in Ihr Postfach.</p>
+        </div>
+
+        <!-- Analysis Form -->
+        <form id="analysisForm">
+            
+            <!-- Section 1: Email Address -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">📧</span>
+                    <h3>E-Mail-Adresse</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="input-group">
+                    <label for="email">Wohin sollen wir den PDF-Bericht senden?</label>
+                    <input 
+                        type="text" 
+                        id="email" 
+                        name="email" 
+                        placeholder="max.mustermann@mail.de oder mehrere: user1@mail.de, user2@mail.de" 
+                        required
+                        class="form-input"
+                    >
+                    <small class="input-hint">Geben Sie eine E-Mail oder mehrere E-Mails getrennt durch Kommas ein</small>
+                </div>
+            </div>
+
+            <!-- Section 2: Search Method -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">🔍</span>
+                    <h3>Suchmethode</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="radio-group">
+                    <p class="radio-label">Wie sollen wir Bewertungen für die Analyse finden?</p>
+                    
+                    <div class="radio-option">
+                        <input type="radio" id="option-keywords" name="searchMethod" value="keywords" required>
+                        <label for="option-keywords">
+                            <strong>Google-Suche mit Schlüsselwörtern</strong>
+                            <span class="option-description">Suchbegriffe eingeben, um relevante Bewertungsseiten zu finden</span>
+                        </label>
+                    </div>
+                    <div class="input-conditional" id="input-keywords" style="display: none;">
+                        <input 
+                            type="text" 
+                            id="keywords" 
+                            name="keywords" 
+                            placeholder='z.B. "Tokyo Restaurant Bewertungen" oder "Berlin Hotel Feedback"'
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="radio-option">
+                        <input type="radio" id="option-urls" name="searchMethod" value="urls" required>
+                        <label for="option-urls">
+                            <strong>Spezifische URLs analysieren</strong>
+                            <span class="option-description">Direkte Links zu TripAdvisor, Yelp oder Google Bewertungen einfügen</span>
+                        </label>
+                    </div>
+                    <div class="input-conditional" id="input-urls" style="display: none;">
+                        <textarea 
+                            id="urls" 
+                            name="urls" 
+                            rows="4"
+                            placeholder="URLs einfügen (eine pro Zeile):&#10;https://www.tripadvisor.com/...&#10;https://www.yelp.com/..."
+                            class="form-textarea"
+                        ></textarea>
+                    </div>
+
+                    <div class="radio-option">
+                        <input type="radio" id="option-demo" name="searchMethod" value="demo" required checked>
+                        <label for="option-demo">
+                            <strong>Demo-Modus verwenden</strong>
+                            <span class="option-description">Vorgeladene Senso-ji Tempel Bewertungen analysieren (Tokyo)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Custom Prompt (Optional) -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">✍️</span>
+                    <h3>Benutzerdefinierte Analyse-Anweisung</h3>
+                    <span class="optional-badge">Optional</span>
+                </div>
+                <div class="input-group">
+                    <label for="customPrompt">Zusätzliche Anweisungen für die KI (optional):</label>
+                    <textarea 
+                        id="customPrompt" 
+                        name="customPrompt" 
+                        rows="4" 
+                        placeholder="z.B. 'Konzentrieren Sie sich auf Service und Sauberkeit' oder 'Analysieren Sie Trends der letzten 6 Monate'"
+                        class="form-textarea"
+                    ></textarea>
+                    <small class="input-hint">Geben Sie spezifische Anweisungen für die KI-Analyse an</small>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-text">Analyse starten</span>
+                </button>
+                <p class="submit-note">Die Analyse dauert normalerweise 3-5 Minuten. Sie erhalten eine E-Mail, wenn sie abgeschlossen ist.</p>
+            </div>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+        <div id="progressContainer" class="progress-container" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Analyse wird verarbeitet...</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Red6-ES Enterprise Software GmbH | Generative KI-Beratung für Versicherungen</p>
+            <p class="footer-tagline">Von der Idee bis zur Umsetzung</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="chatbot.js"></script>
+    <script>
+        // Load company name from API
+        (async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl && config.company_name) {
+                        nameEl.textContent = config.company_name;
+                    }
+                } else {
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl) nameEl.textContent = 'Red6-ES';
+                }
+            } catch (error) {
+                console.warn('Failed to load company name:', error);
+                const nameEl = document.getElementById('companyName');
+                if (nameEl) nameEl.textContent = 'Red6-ES';
+            }
+        })();
+    </script>
+<!-- Chatbot Widget (appears after analysis complete) -->
+<div id="chatbotWidget" class="chatbot-widget" style="display: none;">
+    <div class="chatbot-header">
+        <div class="chatbot-title">
+            <span class="chatbot-icon">💬</span>
+            <h3>Fragen Sie zu Ihren Ergebnissen</h3>
+        </div>
+        <button id="closeChatBtn" class="close-chat-btn">×</button>
+    </div>
+    
+    <div class="chatbot-messages" id="chatMessages">
+        <div class="chatbot-welcome">
+            <p><strong>Hallo! Ich bin Ihr KI-Analyse-Assistent.</strong></p>
+            <p>Fragen Sie mich alles über Ihre Sentiment-Analyse-Ergebnisse:</p>
+            <div class="suggested-questions" id="suggestedQuestions">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="chatbot-input-area">
+        <textarea 
+            id="chatInput" 
+            class="chat-input" 
+            placeholder="Stellen Sie eine Frage zu Ihren Ergebnissen..."
+            rows="2"
+        ></textarea>
+        <button id="sendChatBtn" class="send-chat-btn">
+            <span>Senden</span>
+        </button>
+    </div>
+</div>
+
+<!-- Chatbot Toggle Button (floating) -->
+<button id="toggleChatBtn" class="toggle-chat-btn" style="display: none;">
+    <span class="chat-bubble-icon">💬</span>
+    <span class="chat-label">KI fragen</span>
+</button>
+</body>
+</html>

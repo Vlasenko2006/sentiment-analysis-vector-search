@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Sentiment-Analyse für Versicherungen | red6 GenAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            background-color: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #0A2540 0%, #1a3a5f 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            height: 50px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #E63946;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #0A2540 0%, #1a3a5f 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-subtitle {
+            color: #E63946;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Features Section */
+        .features {
+            background-color: #f8f9fa;
+            padding: 3rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .feature-card h3 {
+            color: #0A2540;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: #E63946;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Analysis Form */
+        .analysis-section {
+            background: white;
+            padding: 3rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #0A2540;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .form-container {
+            background: #f8f9fa;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #0A2540;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #E63946;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #E63946 0%, #d62839 100%);
+            color: white;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(230, 57, 70, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress */
+        .progress-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #E63946 0%, #d62839 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-message {
+            text-align: center;
+            margin-top: 1rem;
+            color: #0A2540;
+            font-weight: 500;
+        }
+
+        /* Results */
+        .results-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card h3 {
+            color: #0A2540;
+            margin-bottom: 1rem;
+        }
+
+        .download-btn {
+            background: #0A2540;
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #1a3a5f;
+        }
+
+        /* Footer */
+        footer {
+            background: #0A2540;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <img src="red6-logo.jpg" alt="red6 Logo" class="logo">
+            <nav>
+                <a href="https://red6-es.de/startseite/genai/">GenAI</a>
+                <a href="https://red6-es.de/services/">Services</a>
+                <a href="https://red6-es.de/kontakt/">Kontakt</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-subtitle">GENERATIVE KI FÜR VERSICHERUNGEN</div>
+            <h1>KI-Sentiment-Analyse für Kundenfeedback</h1>
+            <p>Automatisierte Analyse von Kundenbewertungen mit DistilBERT und LLaMA 3.1</p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Mehrwert durch KI für Ihr Unternehmen</h2>
+            <p class="section-subtitle">Unsere GenAI-Lösung analysiert Kundenfeedback und generiert automatisch Handlungsempfehlungen</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>KI-gestützte Analyse</h3>
+                    <p>DistilBERT klassifiziert Sentiments mit hoher Genauigkeit, während LLaMA 3.1 aussagekräftige Zusammenfassungen generiert.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Risiko-Assessment</h3>
+                    <p>Automatische Berechnung des Insolvenzrisikos basierend auf Kundenstimmung und Bewertungstrends.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3>Automatische Berichte</h3>
+                    <p>Professionelle PDF-Berichte mit Visualisierungen, KI-Empfehlungen und detaillierter Risikoanalyse.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Schnelle Verarbeitung</h3>
+                    <p>Analyse von hunderten Bewertungen in wenigen Minuten mit vollautomatisiertem Pipeline.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Handlungsempfehlungen</h3>
+                    <p>LLaMA generiert konkrete, umsetzbare Verbesserungsvorschläge basierend auf der Sentiment-Analyse.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📧</div>
+                    <h3>Automatischer Versand</h3>
+                    <p>Berichte werden automatisch per E-Mail an Stakeholder verschickt.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analysis Form Section -->
+    <section class="analysis-section">
+        <div class="container">
+            <h2 class="section-title">Starten Sie Ihre Analyse</h2>
+            <p class="section-subtitle">Analysieren Sie Kundenbewertungen in Echtzeit</p>
+            
+            <div class="form-container">
+                <form id="analysisForm">
+                    <div class="form-group">
+                        <label for="searchMethod">Analysemethode</label>
+                        <select id="searchMethod" name="searchMethod" required>
+                            <option value="demo">Demo (vorgeladene Daten)</option>
+                            <option value="keywords">Keywords-Suche</option>
+                            <option value="urls">URL-Analyse</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="searchInputGroup" style="display: none;">
+                        <label for="searchInput" id="searchInputLabel">Eingabe</label>
+                        <textarea id="searchInput" name="searchInput" placeholder="Geben Sie Keywords oder URLs ein..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="companyName">Firmenname</label>
+                        <input type="text" id="companyName" name="companyName" value="red6 enterprise software" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emails">E-Mail für Berichtversand (optional)</label>
+                        <input type="email" id="emails" name="emails" placeholder="ihre.email@unternehmen.de">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customPrompt">Benutzerdefinierter Prompt (optional)</label>
+                        <textarea id="customPrompt" name="customPrompt" placeholder="Spezifische Anweisungen für die KI-Analyse..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn">
+                        Analyse starten
+                    </button>
+                </form>
+
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill">0%</div>
+                    </div>
+                    <div class="progress-message" id="progressMessage">Initialisierung...</div>
+                </div>
+
+                <!-- Results -->
+                <div class="results-container" id="resultsContainer">
+                    <div class="result-card">
+                        <h3>✅ Analyse abgeschlossen!</h3>
+                        <p>Ihr Bericht wurde erfolgreich generiert.</p>
+                        <a href="#" class="download-btn" id="downloadBtn" target="_blank">
+                            📄 Bericht herunterladen (PDF)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 red6 enterprise software GmbH</p>
+            <p>KI-Sentiment-Analyse | Powered by DistilBERT & LLaMA 3.1</p>
+            <div class="footer-links">
+                <a href="https://red6-es.de/impressum/">Impressum</a>
+                <a href="https://red6-es.de/datenschutz/">Datenschutz</a>
+                <a href="https://red6-es.de/kontakt/">Kontakt</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Form handling
+        const form = document.getElementById('analysisForm');
+        const searchMethod = document.getElementById('searchMethod');
+        const searchInputGroup = document.getElementById('searchInputGroup');
+        const searchInputLabel = document.getElementById('searchInputLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressMessage = document.getElementById('progressMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Show/hide search input based on method
+        searchMethod.addEventListener('change', function() {
+            if (this.value === 'demo') {
+                searchInputGroup.style.display = 'none';
+            } else {
+                searchInputGroup.style.display = 'block';
+                searchInputLabel.textContent = this.value === 'keywords' ? 'Keywords' : 'URLs';
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Collect form data
+            const formData = {
+                search_method: document.getElementById('searchMethod').value,
+                search_input: document.getElementById('searchInput').value,
+                company_name: document.getElementById('companyName').value,
+                emails: document.getElementById('emails').value,
+                custom_prompt: document.getElementById('customPrompt').value
+            };
+
+            // Disable form and show progress
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analyse läuft...';
+            progressContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+
+            try {
+                // Start analysis
+                const response = await fetch('http://localhost:8000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                const jobId = data.job_id;
+
+                // Poll for status
+                pollJobStatus(jobId);
+            } catch (error) {
+                alert('Fehler beim Starten der Analyse: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Analyse starten';
+                progressContainer.style.display = 'none';
+            }
+        });
+
+        // Poll job status
+        async function pollJobStatus(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`http://localhost:8000/status/${jobId}`);
+                    const data = await response.json();
+
+                    // Update progress
+                    const progress = data.progress || 0;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    progressMessage.textContent = data.message || 'Verarbeitung...';
+
+                    // Check if complete
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        
+                        // Show results
+                        progressContainer.style.display = 'none';
+                        resultsContainer.style.display = 'block';
+                        downloadBtn.href = `http://localhost:8000/download/${jobId}`;
+
+                        // Re-enable form
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Analyse starten';
+                    } else if (data.status === 'failed') {
+                        clearInterval(interval);
+                        alert('Analyse fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler'));
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Analyse starten';
+                        progressContainer.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+    </script>
+</body>
+</html>

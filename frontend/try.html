@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red6-ES | KI-gesteuerte Sentiment-Analyse</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header with Red6-ES branding -->
+    <header class="gradient-header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="red6-logo.jpg" alt="Red6-ES Logo" class="company-logo">
+            </div>
+            <h1 class="header-title" id="companyName">Red6-ES</h1>
+            <p class="header-subtitle">KI-gesteuerte Sentiment-Analyse für Risikomodellierung</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Welcome Message -->
+        <div class="welcome-section">
+            <h2>Willkommen bei der Red6-ES Sentiment-Analyse Plattform! 🎯</h2>
+            <p>Analysieren Sie Kundenbewertungen mit fortschrittlicher Sentiment-Analyse basierend auf DistilBERT und Groq AI. 
+               Erhalten Sie umfassende Einblicke, Trends und umsetzbare Empfehlungen direkt in Ihr Postfach.</p>
+        </div>
+
+        <!-- Analysis Form -->
+        <form id="analysisForm">
+            
+            <!-- Section 1: Email Address -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">📧</span>
+                    <h3>E-Mail-Adresse</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="input-group">
+                    <label for="email">Wohin sollen wir den PDF-Bericht senden?</label>
+                    <input 
+                        type="text" 
+                        id="email" 
+                        name="email" 
+                        placeholder="max.mustermann@mail.de oder mehrere: user1@mail.de, user2@mail.de" 
+                        required
+                        class="form-input"
+                    >
+                    <small class="input-hint">Geben Sie eine E-Mail oder mehrere E-Mails getrennt durch Kommas ein</small>
+                </div>
+            </div>
+
+            <!-- Section 2: Search Method -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">🔍</span>
+                    <h3>Suchmethode</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="radio-group">
+                    <p class="radio-label">Wie sollen wir Bewertungen für die Analyse finden?</p>
+                    
+                    <label class="radio-option">
+                        <input type="radio" name="searchMethod" value="google_search" required>
+                        <span class="radio-custom"></span>
+                        <div class="radio-content">
+                            <strong>Google-Suche</strong>
+                            <span>Automatische Suche nach Bewertungen über Google</span>
+                        </div>
+                    </label>
+                    
+                    <label class="radio-option">
+                        <input type="radio" name="searchMethod" value="website_links">
+                        <span class="radio-custom"></span>
+                        <div class="radio-content">
+                            <strong>Website-Links</strong>
+                            <span>Direkter Zugriff auf spezifische Bewertungsseiten</span>
+                        </div>
+                    </label>
+
+                    <label class="radio-option">
+                        <input type="radio" name="searchMethod" value="demo" checked>
+                        <span class="radio-custom"></span>
+                        <div class="radio-content">
+                            <strong>Demo-Modus</strong>
+                            <span>Vorgeladene Senso-ji Tempel Bewertungen analysieren (Tokyo)</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section 3: Company Name (Conditional) -->
+            <div id="companySection" class="form-section" style="display: none;">
+                <div class="section-header">
+                    <span class="section-icon">🏢</span>
+                    <h3>Firmenname</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="input-group">
+                    <label for="company">Nach welchem Unternehmen sollen wir suchen?</label>
+                    <input 
+                        type="text" 
+                        id="company" 
+                        name="company" 
+                        placeholder="z.B. Restaurant Goldener Löwe" 
+                        class="form-input"
+                    >
+                    <small class="input-hint">Geben Sie den Firmennamen ein, wie er auf Google erscheint</small>
+                </div>
+            </div>
+
+            <!-- Section 4: Website Links (Conditional) -->
+            <div id="linksSection" class="form-section" style="display: none;">
+                <div class="section-header">
+                    <span class="section-icon">🔗</span>
+                    <h3>Website-Links</h3>
+                    <span class="required-badge">Pflichtfeld</span>
+                </div>
+                <div class="input-group">
+                    <label for="links">Fügen Sie Links zu Bewertungsseiten hinzu:</label>
+                    <textarea 
+                        id="links" 
+                        name="links" 
+                        rows="5" 
+                        placeholder="https://www.google.com/maps/place/Restaurant+Beispiel&#10;https://www.tripadvisor.com/Restaurant_Review&#10;https://www.yelp.com/biz/restaurant-beispiel"
+                        class="form-textarea"
+                    ></textarea>
+                    <small class="input-hint">Geben Sie einen Link pro Zeile ein (Google Maps, TripAdvisor, Yelp, etc.)</small>
+                </div>
+            </div>
+
+            <!-- Section 5: Custom Prompt (Optional) -->
+            <div class="form-section">
+                <div class="section-header">
+                    <span class="section-icon">✍️</span>
+                    <h3>Benutzerdefinierte Analyse-Anweisung</h3>
+                    <span class="optional-badge">Optional</span>
+                </div>
+                <div class="input-group">
+                    <label for="customPrompt">Zusätzliche Anweisungen für die KI (optional):</label>
+                    <textarea 
+                        id="customPrompt" 
+                        name="customPrompt" 
+                        rows="4" 
+                        placeholder="z.B. 'Konzentrieren Sie sich auf Lebensmittelqualität und Service' oder 'Analysieren Sie Trends in den letzten 6 Monaten'"
+                        class="form-textarea"
+                    ></textarea>
+                    <small class="input-hint">Geben Sie spezifische Anweisungen für die KI-Analyse an</small>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-text">Analyse starten</span>
+                </button>
+                <p class="submit-note">Die Analyse dauert normalerweise 3-5 Minuten. Sie erhalten eine E-Mail, wenn sie abgeschlossen ist.</p>
+            </div>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+        <div id="progressContainer" class="progress-container" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Analyse wird verarbeitet...</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Red6-ES Enterprise Software GmbH | Generative KI-Beratung für Versicherungen</p>
+            <p class="footer-tagline">Von der Idee bis zur Umsetzung</p>
+        </footer>
+    </div>
+
+    <!-- Chatbot Button -->
+    <button id="chatbotBtn" class="chatbot-btn" aria-label="AI Chatbot öffnen">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <!-- Chatbot Panel -->
+    <div id="chatbotPanel" class="chatbot-panel" style="display: none;">
+        <div class="chatbot-header">
+            <h3>🤖 Red6-ES KI-Assistent</h3>
+            <button id="closeChatbot" class="close-chatbot" aria-label="Chatbot schließen">&times;</button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chatbot-message bot-message">
+                <p>Hallo! Ich bin Ihr Red6-ES KI-Assistent. Wie kann ich Ihnen bei der Sentiment-Analyse helfen?</p>
+            </div>
+        </div>
+        <div class="chatbot-input-container">
+            <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Stellen Sie eine Frage...">
+            <button id="sendChatbot" class="send-chatbot">Senden</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="chatbot.js"></script>
+    <script>
+        // Load company name from API
+        (async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl && config.company_name) {
+                        nameEl.textContent = config.company_name;
+                    }
+                } else {
+                    const nameEl = document.getElementById('companyName');
+                    if (nameEl) nameEl.textContent = 'Red6-ES';
+                }
+            } catch (error) {
+                console.warn('Failed to load company name:', error);
+                const nameEl = document.getElementById('companyName');
+                if (nameEl) nameEl.textContent = 'Red6-ES';
+            }
+        })();
+    </script>
+</body>
+</html>

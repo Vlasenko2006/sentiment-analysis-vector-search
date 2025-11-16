@@ -1,0 +1,46 @@
+# Multi-stage build for .NET Core Web API
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy project file and restore dependencies
+COPY SentimentAPI/*.csproj ./SentimentAPI/
+RUN dotnet restore "SentimentAPI/SentimentAPI.csproj"
+
+# Copy source code and build
+COPY SentimentAPI/. ./SentimentAPI/
+WORKDIR "/src/SentimentAPI"
+RUN dotnet build "SentimentAPI.csproj" -c Release -o /app/build
+
+# Stage 2: Publish
+FROM build AS publish
+RUN dotnet publish "SentimentAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 3: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' dotnetuser && \
+    chown -R dotnetuser:dotnetuser /app
+
+# Install curl for health checks
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy published files
+COPY --from=publish /app/publish .
+
+# Switch to non-root user
+USER dotnetuser
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start the application
+ENTRYPOINT ["dotnet", "SentimentAPI.dll"]

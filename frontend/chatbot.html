@@ -1,0 +1,38 @@
+<!-- Chatbot Widget (appears after analysis complete) -->
+<div id="chatbotWidget" class="chatbot-widget" style="display: none;">
+    <div class="chatbot-header">
+        <div class="chatbot-title">
+            <span class="chatbot-icon">💬</span>
+            <h3>Ask about your results</h3>
+        </div>
+        <button id="closeChatBtn" class="close-chat-btn">×</button>
+    </div>
+    
+    <div class="chatbot-messages" id="chatMessages">
+        <div class="chatbot-welcome">
+            <p><strong>Hi! I'm your AI analysis assistant.</strong></p>
+            <p>Ask me anything about your sentiment analysis results:</p>
+            <div class="suggested-questions" id="suggestedQuestions">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="chatbot-input-area">
+        <textarea 
+            id="chatInput" 
+            class="chat-input" 
+            placeholder="Ask a question about your results..."
+            rows="2"
+        ></textarea>
+        <button id="sendChatBtn" class="send-chat-btn">
+            <span>Send</span>
+        </button>
+    </div>
+</div>
+
+<!-- Chatbot Toggle Button (floating) -->
+<button id="toggleChatBtn" class="toggle-chat-btn" style="display: none;">
+    <span class="chat-bubble-icon">💬</span>
+    <span class="chat-label">Ask AI</span>
+</button>
