@@ -290,15 +290,11 @@ class Routes:
             - "What should we fix first?"
             - etc.
             """
-            logger.info(f"💬 [CHATBOT] Received chat request for job {job_id}: '{request.question}'")
-            
             # Check if job exists and is complete
             if job_id not in self.jobs_db:
-                logger.warning(f"⚠️ [CHATBOT] Job {job_id} not found in jobs_db")
                 raise HTTPException(status_code=404, detail="Job not found")
             
             job = self.jobs_db[job_id]
-            logger.info(f"📊 [CHATBOT] Job status: {job['status']}")
             
             if job['status'] != 'completed':
                 raise HTTPException(
@@ -308,47 +304,35 @@ class Routes:
             
             # Check if results exist
             results_path = f"my_volume/sentiment_analysis/{job_id}"
-            logger.info(f"📂 [CHATBOT] Checking results path: {results_path}")
             
             if not os.path.exists(results_path):
-                logger.error(f"❌ [CHATBOT] Results path does not exist: {results_path}")
                 raise HTTPException(status_code=404, detail="Analysis results not found")
             
             # Initialize chatbot if not already created
             if job_id not in self.chatbots:
-                logger.info(f"🤖 [CHATBOT] Initializing new chatbot for job {job_id}")
-                
                 groq_api_key = os.getenv('GROQ_API_KEY')
                 if not groq_api_key:
-                    logger.error("❌ [CHATBOT] GROQ_API_KEY not set in environment")
                     raise HTTPException(
                         status_code=500, 
                         detail="GROQ_API_KEY not configured on server"
                     )
                 
-                logger.info(f"✅ [CHATBOT] GROQ_API_KEY found (length: {len(groq_api_key)})")
-                
                 try:
                     self.chatbots[job_id] = ResultsChatbot(job_id, results_path, groq_api_key)
-                    logger.info(f"✅ [CHATBOT] Created new chatbot for job {job_id}")
+                    logger.info(f"Created new chatbot for job {job_id}")
                 except Exception as e:
-                    logger.error(f"❌ [CHATBOT] Failed to initialize chatbot: {e}", exc_info=True)
+                    logger.error(f"Failed to initialize chatbot: {e}")
                     raise HTTPException(status_code=500, detail=f"Failed to initialize chatbot: {str(e)}")
-            else:
-                logger.info(f"♻️ [CHATBOT] Using existing chatbot for job {job_id}")
             
             # Get answer from chatbot
             try:
-                logger.info(f"🧠 [CHATBOT] Sending question to chatbot: '{request.question}'")
                 chatbot = self.chatbots[job_id]
                 answer = chatbot.ask(request.question, include_history=request.include_history)
-                logger.info(f"✅ [CHATBOT] Received answer (length: {len(answer)} chars)")
                 
                 # Get suggested questions for first interaction
                 suggested = None
                 if len(chatbot.conversation_history) <= 2:  # First question
                     suggested = chatbot.get_suggested_questions()
-                    logger.info(f"💡 [CHATBOT] Generated {len(suggested) if suggested else 0} suggestions")
                 
                 return ChatResponse(
                     job_id=job_id,
@@ -358,7 +342,7 @@ class Routes:
                 )
                 
             except Exception as e:
-                logger.error(f"❌ [CHATBOT] Error in chatbot interaction: {e}", exc_info=True)
+                logger.error(f"Error in chatbot interaction: {e}")
                 raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")
         
         @self.router.get("/api/results/{job_id}/chat/suggestions")
@@ -404,25 +388,3 @@ class Routes:
                 "message": "Conversation history cleared"
             }
         
-        @self.router.post("/api/debug/log")
-        async def debug_log(request: Request):
-            """Receive debug logs from frontend"""
-            try:
-                data = await request.json()
-                
-                # Log to file
-                debug_dir = "debuglogs"
-                os.makedirs(debug_dir, exist_ok=True)
-                
-                log_file = os.path.join(debug_dir, f"python-backend-{datetime.now().strftime('%Y-%m-%d')}.log")
-                log_line = f"[{data.get('timestamp')}] FRONTEND-{data.get('component')} - {data.get('action')}: {json.dumps(data.get('data'))}\n"
-                
-                with open(log_file, 'a') as f:
-                    f.write(log_line)
-                
-                logger.info(f"DEBUG [{data.get('component')}] {data.get('action')}: {data.get('data')}")
-                
-                return {"received": True}
-            except Exception as e:
-                logger.error(f"Error logging debug: {e}")
-                return {"received": False, "error": str(e)}

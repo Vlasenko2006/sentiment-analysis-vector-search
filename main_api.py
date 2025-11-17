@@ -27,7 +27,6 @@ from chatbot_analyzer import ResultsChatbot
 from insurance_calculator import calculate_insurance_risk
 from routes import Routes
 from cleanup_old_jobs import cleanup_old_jobs
-from middleware import debug_middleware
 from pipeline_helpers import (
     initialize_mlflow_tracking,
     setup_analysis_directories,
@@ -198,9 +197,6 @@ routes_handler = Routes(
     key_config=key_config
 )
 app.include_router(routes_handler.router)
-
-# Add debug middleware for chatbot endpoints
-app.middleware("http")(debug_middleware)
 
 
 if __name__ == "__main__":

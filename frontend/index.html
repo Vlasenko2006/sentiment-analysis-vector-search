@@ -1069,7 +1069,6 @@
 
             try {
                 // Submit analysis request
-                console.log('🔍 Submitting analysis with data:', formData);
                 const response = await fetch('http://localhost:5001/api/sentiment/analyze', {
                     method: 'POST',
                     headers: {
@@ -1078,7 +1077,6 @@
                     body: JSON.stringify(formData)
                 });
 
-                console.log('🔍 Response status:', response.status);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -1087,7 +1085,6 @@
                 }
 
                 const data = await response.json();
-                console.log('🔍 Response data:', data);
                 
                 if (!data.job_id) {
                     console.error('❌ No job_id in response!', data);
@@ -1095,7 +1092,6 @@
                 }
                 
                 currentJobId = data.job_id;
-                console.log('✅ Job ID:', currentJobId);
                 
                 // Store job_id for chatbot
                 localStorage.setItem('recentJobId', currentJobId);
@@ -1118,17 +1114,9 @@
                             const resultsResponse = await fetch(`http://localhost:5001/api/sentiment/results/${currentJobId}/data`);
                             const resultsData = await resultsResponse.json();
                             
-                            console.log('Results data:', resultsData); // Debug log
-                            console.log('🔍 [DEBUG] Has statistics?', !!resultsData.statistics);
-                            console.log('🔍 [DEBUG] Has trends?', !!resultsData.trends);
-                            console.log('🔍 [DEBUG] trends.summary:', resultsData.trends?.summary);
-                            console.log("🔍 DEBUG: Fetching results for job:", currentJobId);
+                            console.log('Results data:', resultsData); 
                             // Use statistics from performance_summary.json if available
-                            console.log("📊 DEBUG: Full API Response:", JSON.stringify(resultsData, null, 2));
                             
-                            console.log("📈 DEBUG: statistics exists?", !!resultsData.statistics);
-                            console.log("📉 DEBUG: trends exists?", !!resultsData.trends);
-                            console.log("📋 DEBUG: trends.summary exists?", !!(resultsData.trends?.summary));
                             if (resultsData.statistics) {
                                 // Primary source: performance_summary.json
                                 totalPositive = resultsData.statistics.positive || 0;
@@ -1145,7 +1133,7 @@
                                 totalReviews = summary.total_reviews || 0;
                             }
                             
-                            console.log('✨ [DEBUG] FINAL Counts:', { totalPositive, totalNegative, totalNeutral, totalReviews }); // Debug log
+                            console.log('✨ [DEBUG] FINAL Counts:', { totalPositive, totalNegative, totalNeutral, totalReviews }); 
                             
                             // Update UI
                             document.getElementById('positiveCount').textContent = totalPositive;
