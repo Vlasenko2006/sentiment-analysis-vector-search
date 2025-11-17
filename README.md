@@ -23,7 +23,7 @@ Roberta is an ELT frontend-backend universal platform that processes information
 ## Top of the RoBERTa's front page
 
 <p align="center">
-<img src="https://github.com/Vlasenko2006/sentiment-analysis-vector-search/blob/main/Images/RoBERTa.png" alt="RoBERTa front page" width="50%">
+<img src="https://github.com/Vlasenko2006/sentiment-analysis-vector-search/blob/main/Images/RoBERTa.png" alt="RoBERTa front page" width="90%">
 </p>
 
 ## Report & architecture overview
@@ -34,7 +34,7 @@ Roberta is an ELT frontend-backend universal platform that processes information
 
 <table align="center">
   <tr>
-    <td><img src="https://github.com/Vlasenko2006/sentiment-analysis-vector-search/blob/main/Images/Report1.png" alt="Report 1" width="85%"></td>
+    <td><img src="https://github.com/Vlasenko2006/sentiment-analysis-vector-search/blob/main/Images/Report1.png" alt="Report 1" width="100%"></td>
     <td><img src="https://github.com/Vlasenko2006/sentiment-analysis-vector-search/blob/main/Images/Report2.png" alt="Report 2" width="100%"></td>
   </tr>
 </table>
