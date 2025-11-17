@@ -71,7 +71,7 @@ class DebugLogger {
 
     async sendToServer(logEntry) {
         try {
-            const response = await fetch('http://localhost:5000/api/debug/log', {
+            const response = await fetch('http://localhost:5001/api/debug/log', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

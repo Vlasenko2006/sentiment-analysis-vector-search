@@ -69,14 +69,17 @@ def load_existing_data(OUTPUT_BASE_DIR):
         tuple: (results_df, representative_results, performance_summary)
     """
     try:
-        # Load from saved CSV file
-        csv_path = os.path.join(OUTPUT_BASE_DIR, "sentiment_results.csv")
+        # Load from saved CSV file - try both filenames
+        csv_path = os.path.join(OUTPUT_BASE_DIR, "complete_results.csv")
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(OUTPUT_BASE_DIR, "sentiment_results.csv")
+        
         if os.path.exists(csv_path):
             results_df = pd.read_csv(csv_path)
             print(f"✅ Loaded {len(results_df)} results from CSV")
         else:
             results_df = None
-            print(f"⚠️ Results CSV not found at {csv_path}")
+            print(f"⚠️ Results CSV not found at {OUTPUT_BASE_DIR}")
         
         # Load representative comments
         repr_path = os.path.join(OUTPUT_BASE_DIR, "representative_comments.json")

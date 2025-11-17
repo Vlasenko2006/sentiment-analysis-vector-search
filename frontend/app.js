@@ -1,6 +1,27 @@
 // Configuration
-const API_BASE_URL = 'http://localhost:5000/api/sentiment';
+const API_BASE_URL = 'http://localhost:5001/api/sentiment';
 const POLL_INTERVAL = 3000; // Poll every 3 seconds
+
+// === DEBUG: Startup diagnostics ===
+console.log('🔍 DEBUG: app.js loaded at', new Date().toISOString());
+console.log('🔍 DEBUG: API_BASE_URL =', API_BASE_URL);
+console.log('🔍 DEBUG: Current origin:', window.location.origin);
+console.log('🔍 DEBUG: Current URL:', window.location.href);
+
+// Test backend connectivity on page load
+fetch('http://localhost:5001/health')
+    .then(r => {
+        console.log('✅ STARTUP: Backend reachable, HTTP status:', r.status);
+        return r.json();
+    })
+    .then(data => {
+        console.log('✅ STARTUP: Health check passed:', data);
+    })
+    .catch(e => {
+        console.error('❌ STARTUP: CANNOT REACH BACKEND!', e);
+        console.error('❌ STARTUP: Error details:', e.message, e.stack);
+    });
+// === END DEBUG ===
 
 // Global state
 let currentJobId = null;
@@ -186,6 +207,10 @@ async function startAnalysis(requestData) {
 
         const apiUrl = `${API_BASE_URL}/analyze`;
         
+        console.log('🔍 DEBUG: About to call API');
+        console.log('🔍 DEBUG: API URL:', apiUrl);
+        console.log('🔍 DEBUG: Payload:', apiPayload);
+        
         window.debugLogger?.log('APP', '→ OUTPUT: API Request', { 
             url: apiUrl, 
             method: 'POST',
@@ -194,6 +219,7 @@ async function startAnalysis(requestData) {
         });
 
         // Call API
+        console.log('🔍 DEBUG: Calling fetch()...');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -201,6 +227,7 @@ async function startAnalysis(requestData) {
             },
             body: JSON.stringify(apiPayload)
         });
+        console.log('🔍 DEBUG: fetch() returned, status:', response.status);
 
         window.debugLogger?.log('APP', `← INPUT: API Response Status ${response.status}`, { 
             ok: response.ok, 
@@ -238,6 +265,11 @@ async function startAnalysis(requestData) {
         startPolling();
 
     } catch (error) {
+        console.error('❌ DEBUG: ERROR in startAnalysis:', error);
+        console.error('❌ DEBUG: Error name:', error.name);
+        console.error('❌ DEBUG: Error message:', error.message);
+        console.error('❌ DEBUG: Error stack:', error.stack);
+        
         window.debugLogger?.log('ERROR', 'Analysis Start Failed', { 
             error: error.message, 
             stack: error.stack,
@@ -275,6 +307,8 @@ async function checkJobStatus() {
     try {
         const statusUrl = `${API_BASE_URL}/status/${currentJobId}`;
         
+        console.log('🔍 DEBUG: Checking status, URL:', statusUrl);
+        
         window.debugLogger?.log('APP', '→ OUTPUT: Status Check Request', { 
             url: statusUrl, 
             jobId: currentJobId,
@@ -282,6 +316,8 @@ async function checkJobStatus() {
         });
 
         const response = await fetch(statusUrl);
+        
+        console.log('🔍 DEBUG: Status response received, status:', response.status);
 
         window.debugLogger?.log('APP', `← INPUT: Status Response ${response.status}`, { 
             ok: response.ok, 
@@ -330,6 +366,11 @@ async function checkJobStatus() {
         }
 
     } catch (error) {
+        console.error('❌ DEBUG: ERROR in checkJobStatus:', error);
+        console.error('❌ DEBUG: Status check error name:', error.name);
+        console.error('❌ DEBUG: Status check error message:', error.message);
+        console.error('❌ DEBUG: Likely cause: Network error or CORS issue');
+        
         window.debugLogger?.log('ERROR', 'Status Check Exception', { 
             error: error.message, 
             jobId: currentJobId,
@@ -438,7 +479,7 @@ async function fetchQuickStats(jobId) {
     try {
         // Temporary fix: Call Python API directly to get statistics
         // (DOTNET gateway strips the statistics field)
-        const pythonUrl = `http://localhost:8000/api/results/${jobId}/data`;
+        const pythonUrl = `http://localhost:8001/api/results/${jobId}/data`;
         const response = await fetch(pythonUrl);
         
         if (!response.ok) {

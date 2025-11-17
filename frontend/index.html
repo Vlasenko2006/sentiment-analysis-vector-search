@@ -1044,16 +1044,17 @@
             }
             
             const formData = {
-                company_name: document.getElementById('companyName').value,
-                search_method: document.getElementById('searchMethod').value,
                 email: emailInput,  // Keep as comma-separated string - backend handles it
-                custom_prompt: document.getElementById('customPrompt').value || null
+                customPrompt: document.getElementById('customPrompt').value || null,
+                searchMethod: document.getElementById('searchMethod').value
             };
 
-            if (formData.search_method === 'url') {
+            if (formData.searchMethod === 'url') {
                 formData.url = document.getElementById('targetUrl').value;
-            } else if (formData.search_method === 'keywords') {
-                formData.search_input = document.getElementById('keywords').value;
+            } else if (formData.searchMethod === 'keywords') {
+                formData.url = document.getElementById('keywords').value;  // Use 'url' field for keywords too
+            } else if (formData.searchMethod === 'demo') {
+                formData.url = 'demo';
             }
 
             // Show modal
@@ -1068,7 +1069,8 @@
 
             try {
                 // Submit analysis request
-                const response = await fetch('http://localhost:8000/api/analyze', {
+                console.log('🔍 Submitting analysis with data:', formData);
+                const response = await fetch('http://localhost:5001/api/sentiment/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1076,15 +1078,31 @@
                     body: JSON.stringify(formData)
                 });
 
+                console.log('🔍 Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API Error:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
+                }
+
                 const data = await response.json();
+                console.log('🔍 Response data:', data);
+                
+                if (!data.job_id) {
+                    console.error('❌ No job_id in response!', data);
+                    throw new Error('No job_id received from server');
+                }
+                
                 currentJobId = data.job_id;
+                console.log('✅ Job ID:', currentJobId);
                 
                 // Store job_id for chatbot
                 localStorage.setItem('recentJobId', currentJobId);
 
                 // Poll for progress
                 const pollInterval = setInterval(async () => {
-                    const statusResponse = await fetch(`http://localhost:8000/api/status/${currentJobId}`);
+                    const statusResponse = await fetch(`http://localhost:5001/api/sentiment/status/${currentJobId}`);
                     const statusData = await statusResponse.json();
 
                     const progress = Math.round(statusData.progress);
@@ -1097,7 +1115,7 @@
                         
                         // Fetch sentiment summary
                         try {
-                            const resultsResponse = await fetch(`http://localhost:8000/api/results/${currentJobId}/data`);
+                            const resultsResponse = await fetch(`http://localhost:5001/api/sentiment/results/${currentJobId}/data`);
                             const resultsData = await resultsResponse.json();
                             
                             console.log('Results data:', resultsData); // Debug log
@@ -1178,7 +1196,7 @@
         // Download PDF button
         downloadPdfBtn.addEventListener('click', () => {
             if (currentJobId) {
-                window.open(`http://localhost:8000/api/results/${currentJobId}/pdf`, '_blank');
+                window.open(`http://localhost:5001/api/sentiment/results/${currentJobId}/pdf`, '_blank');
             }
         });
         
@@ -1234,7 +1252,7 @@
             if (recentJobId) {
                 // Use backend chatbot with analysis context
                 try {
-                    const response = await fetch(`http://localhost:8000/api/results/${recentJobId}/chat`, {
+                    const response = await fetch(`http://localhost:5001/api/sentiment/results/${recentJobId}/chat`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
