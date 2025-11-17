@@ -128,7 +128,7 @@ def create_email_message(SENDER_EMAIL,CUSTOMER_EMAIL,SUBJECT):
         </div>
         
         <div class="content">
-            <div class="greeting">Dear Nataliya,</div>
+            <div class="greeting">Dear User,</div>
             
             <div class="main-text">
                 I hope this email finds you well.
@@ -182,40 +182,8 @@ def create_email_message(SENDER_EMAIL,CUSTOMER_EMAIL,SUBJECT):
     </body>
     </html>
     """
+
     
-    # Create plain text version as fallback
-    plain_body = f"""Dear Nataliya,
-
-I hope this email finds you well.
-
-I am pleased to inform you that your RoBERTa sentiment analysis report is now ready and complete.
-
-This comprehensive report includes:
-• Detailed sentiment analysis results from your filtered review data
-• Neural network-based comment classification using DistilBERT
-• Vector search clustering and representative comment identification
-• AI-generated sentiment summaries and actionable recommendations
-• Sentiment trends visualization over time
-• Comprehensive visualizations and statistical insights
-• Technical analysis methodology and performance metrics
-
-The report has been generated using advanced machine learning techniques and provides actionable insights from your review dataset.
-
-Please find the complete PDF report attached to this email.
-
-If you have any questions about the analysis or need further clarification on any aspect of the report, please don't hesitate to reach out.
-
-Best regards,
-RoBERTa Analysis Team
-
----
-Report generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Analysis method: DistilBERT sentiment classification with TF-IDF vectorization
-AI Summaries: Groq LLM (llama-3.1-8b-instant)
-"""
-    
-    # Attach both plain and HTML versions (HTML will be preferred by email clients)
-    msg.attach(MIMEText(plain_body, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
     
     return msg

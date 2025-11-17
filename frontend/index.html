@@ -1119,10 +1119,16 @@
                             const resultsData = await resultsResponse.json();
                             
                             console.log('Results data:', resultsData); // Debug log
-                            
+                            console.log('🔍 [DEBUG] Has statistics?', !!resultsData.statistics);
+                            console.log('🔍 [DEBUG] Has trends?', !!resultsData.trends);
+                            console.log('🔍 [DEBUG] trends.summary:', resultsData.trends?.summary);
+                            console.log("🔍 DEBUG: Fetching results for job:", currentJobId);
                             // Use statistics from performance_summary.json if available
-                            let totalPositive, totalNegative, totalNeutral, totalReviews;
+                            console.log("📊 DEBUG: Full API Response:", JSON.stringify(resultsData, null, 2));
                             
+                            console.log("📈 DEBUG: statistics exists?", !!resultsData.statistics);
+                            console.log("📉 DEBUG: trends exists?", !!resultsData.trends);
+                            console.log("📋 DEBUG: trends.summary exists?", !!(resultsData.trends?.summary));
                             if (resultsData.statistics) {
                                 // Primary source: performance_summary.json
                                 totalPositive = resultsData.statistics.positive || 0;
@@ -1139,7 +1145,7 @@
                                 totalReviews = summary.total_reviews || 0;
                             }
                             
-                            console.log('Counts:', { totalPositive, totalNegative, totalNeutral, totalReviews }); // Debug log
+                            console.log('✨ [DEBUG] FINAL Counts:', { totalPositive, totalNegative, totalNeutral, totalReviews }); // Debug log
                             
                             // Update UI
                             document.getElementById('positiveCount').textContent = totalPositive;
