@@ -139,3 +139,9 @@ obsolete/
 !start.sh
 !REBUILD_FRONTEND.sh
 
+
+# Backup files
+*.bac
+*.backup
+*backup*
+Dockerfile.bac*

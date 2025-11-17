@@ -30,12 +30,17 @@ COPY *.py ./
 # Copy config directory
 COPY config/ ./config/
 
+# Copy PDF generation module
+COPY pdf_generation/ ./pdf_generation/
+
+# Copy Images directory for PDF diagrams
+COPY Images/ ./Images/
+
 # Create output directories
 RUN mkdir -p my_volume/sentiment_analysis \
     my_volume/hf_model \
     extracted_text \
     cache \
-    Images \
     /tmp/hf_cache
 
 # Set environment variables

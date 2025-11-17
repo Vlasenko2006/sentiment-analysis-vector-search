@@ -8,6 +8,7 @@ Breaks down the main analysis pipeline into smaller, focused functions
 import os
 import shutil
 import json
+from pdf_generation import generate_pdf_fun as pdf_gen_func
 import logging
 import traceback
 from datetime import datetime
@@ -210,13 +211,16 @@ def generate_and_copy_pdf(
     db_path: str,
     output_base_dir: str,
     company_name: str,
-    generate_pdf_fun
+    generate_pdf_fun=None
 ) -> None:
     """
     Generate PDF report and copy to visualizations folder
     """
     logger.info(f"Job {job_id}: Generating PDF")
-    generate_pdf_fun(db_path, output_base_dir, company_name=company_name)
+    
+    # Use provided function or default to pdf_generation module
+    pdf_func = generate_pdf_fun if generate_pdf_fun is not None else pdf_gen_func
+    pdf_func(db_path, output_base_dir, company_name=company_name)
     
     # Copy PDF to root visualizations folder for frontend access
     source_pdf = os.path.join(output_base_dir, 'visualizations', 'sentiment_analysis_report.pdf')

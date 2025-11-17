@@ -18,7 +18,7 @@ from extract_text_fun import extract_text_fun
 from Context_analyzer_RoBERTa_fun import Context_analyzer_RoBERTa_fun
 from summarize_sentiments_fun import summarize_sentiments_fun
 from recommendation_fun import recommendation_fun
-from generate_pdf_fun import generate_pdf_fun
+from pdf_generation import generate_pdf_fun
 from download_page_fun import download_page_fun
 from search_methods_fun import process_search_method
 from send_report_email_fun import send_report_email_fun
