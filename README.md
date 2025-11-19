@@ -247,8 +247,8 @@ cd /path/to/Request
 docker compose up -d
 
 # Access services
-open http://localhost:3000  # Frontend
-open http://localhost:8000/docs  # API Docs
+open http://localhost:3000  # Frontend (or port 3001, not sure. check the dockerfile)
+open http://localhost:8000/docs  # API Docs Bthw. it might be 8001, check it in the dockerfile
 open http://localhost:5002  # MLflow (after setup)
 ```
 
@@ -433,6 +433,18 @@ analysis:
 #     model='distilbert-base-uncased-finetuned-sst-2-english'); \
 #     print('Model downloaded successfully')"
 ```
+Then **after your images are built and containers running** run this fix only once:
+
+```
+docker exec sentiment-python-v2 python -c "
+model = AutoModelForSequenceClassification.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
+tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
+model.save_pretrained('./my_volume/hf_model')
+tokenizer.save_pretrained('./my_volume/hf_model')"
+```
+I would be grateful, if you suggest me better options to solve tight memory issue on free trial :)
+
+
 
 **Why:** Model downloads during runtime (first API call), not build time. This prevents build failures.
 
